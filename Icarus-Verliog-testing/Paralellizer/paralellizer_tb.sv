@@ -1,5 +1,5 @@
 `timescale 1ns / 1ns
-`include "./Constants/constants.v"
+`include "./Constants/constants.vh"
 `include "./Paralellizer/paralellizer.v"
 
 module Paralellizer_tb;
@@ -9,7 +9,7 @@ module Paralellizer_tb;
 
     // QSPI data and program signals
     reg [3:0] qspi_data;
-    reg program;
+    reg prog;
 
     // Encrypter ready signals (mocked for testbench)
     reg [`NUM_ENCRYPTERS-1:0] encrypters_ready;
@@ -24,7 +24,7 @@ module Paralellizer_tb;
         .clk(clk),
         .reset(reset),
         .qspi_data(qspi_data),
-        .program(program),
+        .prog(prog),
         .qspi_ready(qspi_ready),
         .encrypters_data(encrypters_data),
         .encrypters_key_rotation(encrypters_key_rotation),
