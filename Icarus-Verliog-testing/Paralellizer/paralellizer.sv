@@ -176,7 +176,7 @@ always @(negedge clk) begin
                 if (encrypter_index == `NUM_ENCRYPTERS) encrypter_data_index = 0;
 
                 key_rotation = key_rotation + 1;
-                if (key_rotation == `KEY_ROTATION_WIDTH) key_rotation = 0;
+                if (key_rotation == `KEY_WIDTH) key_rotation = 0;
             end
         end
 

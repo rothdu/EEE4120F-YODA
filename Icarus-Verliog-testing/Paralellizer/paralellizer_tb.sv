@@ -51,9 +51,10 @@ module Paralellizer_tb;
         .encrypter_index_out(encrypter_index_out)
     );
     
-    reg [3:0] spi_data_values[15:0];
+    reg [3:0] spi_data_values[256:0];
     integer fd, i, j;
     initial begin
+        //fill spi_data_values with data from file
         fd = $fopen("./Constants/qspi_data.csv", "r");
         if (fd == -1) begin
             $display("Error opening file!");
@@ -100,7 +101,7 @@ module Paralellizer_tb;
 
         //start encrypting data. can only be started from idle state
         #4 qspi_sending = 1;
-        for (i = `KEY_QSPI_COUNT; i < 32; i = i + 1) begin
+        for (i = `KEY_QSPI_COUNT; i < 200; i = i + 1) begin
             qspi_data = spi_data_values[i];
             $display("Setting qspi_data to 0x%h", spi_data_values[i]);
             #2;
@@ -113,7 +114,8 @@ module Paralellizer_tb;
 
     always begin
         #1 clk = ~clk;
-        encrypters_data_slice[`ENCRYPTER_WIDTH-1:0] = encrypters_data[1][`ENCRYPTER_WIDTH-1:0];
+        //update slice of encrypters data to be seen on gktwave
+        encrypters_data_slice[`ENCRYPTER_WIDTH-1:0] = encrypters_data[0][`ENCRYPTER_WIDTH-1:0];
     end
 
 endmodule
