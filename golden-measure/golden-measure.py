@@ -23,8 +23,8 @@ def main():
     # Generate arr of shifted keys
     keyArr = np.full(len(df["INPUT"]), np.bitwise_and(key, truncator))
     shifts = np.mod(np.arange(len(keyArr)), nBits)
-    keyArr = np.bitwise_and(np.left_shift(keyArr, shifts), truncator)  + \
-    np.right_shift(keyArr, nBits - shifts)
+    keyArr = np.bitwise_or(np.bitwise_and(np.left_shift(keyArr, shifts), truncator), \
+    np.right_shift(keyArr, nBits - shifts))
     
     # XOR each data piece with relevant key data
     df["GOLDEN"] = np.bitwise_xor(df["INPUT"], keyArr)
