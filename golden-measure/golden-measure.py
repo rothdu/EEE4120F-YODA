@@ -6,25 +6,32 @@ import pandas as pd
 import numpy as np
 import os
 
+# dataPath = "..data/rotating-xor.csv"
+nBits = 32
+dataPath = "rotating-xor.csv"
+key = 0xb4317385
+
 def main():
-    csvPath = os.fsencode("../data/rotating-xor.csv")
-    df = pd.read_csv(os.fsdecode(csvPath), converters={'INPUT': lambda x: int(x, 16)})
-    df["INPUT"] = df["INPUT"].astype(np.uint32)
-    key = np.uint32(0xB431)
-    print(np.binary_repr(key))
+    # used for truncating values to nBits length
+    truncator = np.power(2, nBits) - 1
     
-    keyArr = np.full(len(df["INPUT"]), key, dtype=np.uint32)
-    shifts = np.mod(np.arange(len(keyArr)), np.uint32(32))
-    printBinaryRepr(keyArr)
-    keyArr = np.left_shift(keyArr, shifts) + \
-    np.right_shift(keyArr, np.uint32(32) - shifts)
-
-    printBinaryRepr(keyArr)
-
-
-def printBinaryRepr(arr):
-    for i in arr:
-        print(np.binary_repr(i))
+    # read CSV and truncate all data values to 32 bits exactly
+    csvPath = os.fsencode(dataPath)
+    df = pd.read_csv(os.fsdecode(csvPath), converters={'INPUT': lambda x: int(x, 16)})
+    df["INPUT"] = np.bitwise_and(df["INPUT"], truncator) 
+    
+    # Generate arr of shifted keys
+    keyArr = np.full(len(df["INPUT"]), np.bitwise_and(key, truncator))
+    shifts = np.mod(np.arange(len(keyArr)), nBits)
+    keyArr = np.bitwise_and(np.left_shift(keyArr, shifts), truncator)  + \
+    np.right_shift(keyArr, nBits - shifts)
+    
+    # XOR each data piece with relevant key data
+    df["GOLDEN"] = np.bitwise_xor(df["INPUT"], keyArr)
+    
+    # output to CSV
+    # still need to double check that it doesn't overwrite the data or something
+    df.to_csv("outcsv.csv")
 
 if __name__ == "__main__":
     main()
