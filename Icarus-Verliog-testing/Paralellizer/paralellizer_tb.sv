@@ -27,6 +27,7 @@ module Paralellizer_tb;
     wire [`ENCRYPTER_WIDTH-1:0] encrypter_data_packet_out;
     wire [`ENCRYPTER_QSPI_COUNT_REG-1:0] encrypter_data_index_out;
     wire [`NUM_ENCRYPTERS_REG-1:0] encrypter_index_out;
+    wire [`NUM_ENCRYPTERS-1:0] encrypter_wait_for_ack_out;
     reg [`ENCRYPTER_WIDTH-1:0] encrypters_data_slice;
 
     Paralellizer uut(
@@ -48,7 +49,7 @@ module Paralellizer_tb;
         .key_encrypter_index_out(key_encrypter_index_out),
         .encrypter_data_packet_out(encrypter_data_packet_out),
         .encrypter_data_index_out(encrypter_data_index_out),
-        .encrypter_index_out(encrypter_index_out)
+        .encrypter_wait_for_ack_out(encrypter_wait_for_ack_out)
     );
     
     reg [3:0] spi_data_values[256:0];

@@ -30,7 +30,9 @@ module Paralellizer (
     output reg [`KEY_ENCRYPTER_COUNT_REG-1:0] key_encrypter_index_out,
     output reg [`ENCRYPTER_WIDTH-1:0] encrypter_data_packet_out,
     output reg [`ENCRYPTER_QSPI_COUNT_REG-1:0] encrypter_data_index_out,
-    output reg [`NUM_ENCRYPTERS_REG-1:0] encrypter_index_out
+    output reg [`NUM_ENCRYPTERS_REG-1:0] encrypter_index_out,
+    output reg [`NUM_ENCRYPTERS-1:0] encrypter_wait_for_ack_out
+
 );
 
 reg [2:0] state = `STATE_IDLE;
@@ -46,6 +48,8 @@ reg [`ENCRYPTER_WIDTH_COUNT_REG-1:0] encrypter_data_subindex;
 
 reg [`ENCRYPTER_QSPI_COUNT_REG-1:0] encrypter_data_index;
 reg [`NUM_ENCRYPTERS_REG-1:0] encrypter_index;
+reg [`NUM_ENCRYPTERS-1:0] encrypter_wait_for_ack;
+reg [`NUM_ENCRYPTERS_REG-1:0] encrypter_ack_index;
 integer i;
 
 initial begin
@@ -56,6 +60,7 @@ initial begin
     assign encrypter_data_packet_out = encrypter_data_packet;
     assign encrypter_data_index_out = encrypter_data_index;
     assign encrypter_index_out = encrypter_index;
+    assign encrypter_wait_for_ack_out = encrypter_wait_for_ack;
 
     qspi_ready = 1'b0;
     encrypters_program = 0;
@@ -82,6 +87,7 @@ always @(posedge qspi_sending) begin
         `STATE_IDLE: begin
             state <= `STATE_ENCRYPTING;
             encrypter_index = 0;
+            encrypter_wait_for_ack = 0;
             encrypter_data_index = 0;
             encrypters_data_ready = 0;
             key_rotation = 0;
@@ -130,6 +136,7 @@ always @(posedge clk) begin
         end
 
         `STATE_ENCRYPTING: begin
+            //read spi data
             encrypter_data_packet[encrypter_data_index*4] = qspi_data[0];
             encrypter_data_packet[encrypter_data_index*4+1] = qspi_data[1];
             encrypter_data_packet[encrypter_data_index*4+2] = qspi_data[2];
@@ -160,23 +167,51 @@ always @(negedge clk) begin
 
         `STATE_ENCRYPTING: begin
             if (encrypter_data_index == `ENCRYPTER_QSPI_COUNT) begin
+                //check for all encrypters if they have acknowledged the data
+                for (encrypter_ack_index = 0; encrypter_ack_index < `NUM_ENCRYPTERS; encrypter_ack_index = encrypter_ack_index + 1) begin
+                    //if waiting for ack flag
+                    if (encrypter_wait_for_ack[encrypter_ack_index]) begin
+                        //if data acked = encrypter ready low
+                        if (~encrypters_ready[encrypter_ack_index]) begin
+                            encrypters_data_ready[encrypter_ack_index] = 1'b0;
+                            encrypter_wait_for_ack[encrypter_ack_index] = 1'b0;
+                        end
+                    end
+                end
+                
+                //when packet full, send to encrypters
                 encrypter_data_index = 0;
                 
-                for (encrypter_data_subindex = 0; encrypter_data_subindex < `ENCRYPTER_WIDTH; encrypter_data_subindex = encrypter_data_subindex + 1) begin
-                    encrypters_data[encrypter_index][encrypter_data_subindex] = encrypter_data_packet[encrypter_data_subindex];
+                //check if encrypter is ready for new data
+                if (encrypters_ready[encrypter_index] && ~encrypter_wait_for_ack[encrypter_index]) begin
+                    //put packet on encrypter bus
+                    for (encrypter_data_subindex = 0; encrypter_data_subindex < `ENCRYPTER_WIDTH; encrypter_data_subindex = encrypter_data_subindex + 1) begin
+                        encrypters_data[encrypter_index][encrypter_data_subindex] = encrypter_data_packet[encrypter_data_subindex];
+                    end
+                    //put key rot on encrypter bus
+                    for (key_rotation_index = 0; key_rotation_index < `KEY_ROTATION_WIDTH; key_rotation_index = key_rotation_index + 1) begin
+                        encrypters_key_rotation[encrypter_index][key_rotation_index] = key_rotation[key_rotation_index];
+                    end
+
+                    //signal data is ready
+                    encrypters_data_ready[encrypter_index] = 1'b1;
+                    //flag that it is waiting for data acknoledgement for this encrypter
+                    encrypter_wait_for_ack[encrypter_index] = 1'b1;
+
+                    //move to next encrypter
+                    encrypter_index = encrypter_index + 1;
+                    if (encrypter_index == `NUM_ENCRYPTERS) encrypter_data_index = 0;
+
+                    //move to next key rotation
+                    key_rotation = key_rotation + 1;
+                    if (key_rotation == `KEY_WIDTH) key_rotation = 0;
+
+                    //ready for more data as current data has been written
+                    qspi_ready = 1'b1;
+                end else begin
+                    //if encrypter is not ready, wait for it
+                    qspi_ready = 1'b0;
                 end
-
-                for (key_rotation_index = 0; key_rotation_index < `KEY_ROTATION_WIDTH; key_rotation_index = key_rotation_index + 1) begin
-                    encrypters_key_rotation[encrypter_index][key_rotation_index] = key_rotation[key_rotation_index];
-                end
-
-                encrypters_data_ready[encrypter_index] = 1'b1;
-
-                encrypter_index = encrypter_index + 1;
-                if (encrypter_index == `NUM_ENCRYPTERS) encrypter_data_index = 0;
-
-                key_rotation = key_rotation + 1;
-                if (key_rotation == `KEY_WIDTH) key_rotation = 0;
             end
         end
 
