@@ -13,7 +13,6 @@ module Encrypter_tb;
     reg rdyIn;
     reg rdyOut;
     reg prog;
-    reg error;
 
     wire [`ENCRYPTER_WIDTH-1:0] dataOut;
     wire reqIn;
@@ -30,7 +29,6 @@ Encrypter DUT(
     .rdyIn(rdyIn),
     .rdyOut(rdyOut),
     .prog(prog),
-    .error(error),
     .dataOut(dataOut),
     .reqIn(reqIn),
     .reqOut(reqOut),
@@ -49,34 +47,13 @@ initial begin
     //initialization
     reset = 1;#10;
     reset = 0;
-    dataIn = 0;
-    rot_offset = 0;
-    rdyIn = 0;
-    rdyOut = 0;
-    prog = 0;
-    error = 0;
 end
 
 initial begin
     
     #20;
     dataIn = 16'b1100110011100011; #10;
-
-    rdyIn = 1;#100;
-    rdyIn = 0;#10;
     prog = 1;#10;
-
-    dataIn = 16'b1111000011110000;
-    rot_offset = 4'b0111; #10;
-
-    rdyIn = 1;#100;
-    rdyIn = 0;#10;
-
-    dataIn = 16'b1111000011110000;
-    rot_offset = 4'b0011; #10;
-
-    rdyIn = 1;#100;
-    rdyIn = 0;#10;
 
 end
 
@@ -86,15 +63,23 @@ initial begin
     $dumpvars(1, Encrypter_tb);
 
     $monitor("data_out: %b\trdyIn: %d\trdyOut: %d\treqIn: %d\treqOut: %d\tkey: %b\toffset: %d",dataOut,rdyIn,rdyOut,reqIn,reqOut,key,rot_offset);
-    #500;$finish;
+    #170;$finish;
 end
 
 always @(posedge reqOut) begin
-    #1 rdyOut = 1;
+    #10 rdyOut = 1;
+    #20 rdyOut = 0;
 end
 
-always @(negedge reqOut) begin
-    #1 rdyOut = 0;
+always @(posedge reqIn) begin
+    #5 
+    dataIn = 16'b1111000011110000;
+    rot_offset = 4'b0111; #5;
+    rdyIn = 1;
+end
+
+always @(negedge reqIn) begin
+    #10 rdyIn = 0;
 end
 
 endmodule
