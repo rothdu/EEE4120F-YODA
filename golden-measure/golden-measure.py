@@ -8,8 +8,8 @@ import os
 
 # dataPath = "..data/rotating-xor.csv"
 nBits = 32
-dataPath = "rotating-xor.csv"
-key = 0xb4317385
+dataPath = "../data/rotating-xor.csv"
+key = 0xB4352B93
 
 def main():
     # used for truncating values to nBits length
@@ -28,10 +28,12 @@ def main():
     
     # XOR each data piece with relevant key data
     df["GOLDEN"] = np.bitwise_xor(df["INPUT"], keyArr)
+    df["GOLDEN"] = df["GOLDEN"].apply("{:X}".format)
+    df["INPUT"] = df["INPUT"].apply("{:X}".format)
     
     # output to CSV
     # still need to double check that it doesn't overwrite the data or something
-    df.to_csv("outcsv.csv")
+    df.to_csv(dataPath, index=False)
 
 if __name__ == "__main__":
     main()
