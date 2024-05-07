@@ -27,7 +27,6 @@ module Paralellizer_tb;
     wire [`ENCRYPTER_WIDTH-1:0] encrypter_data_packet_out;
     wire [`ENCRYPTER_QSPI_COUNT_REG-1:0] encrypter_data_index_out;
     wire [`NUM_ENCRYPTERS_REG-1:0] encrypter_index_out;
-    wire [`NUM_ENCRYPTERS-1:0] encrypter_wait_for_ack_out;
     reg [`ENCRYPTER_WIDTH-1:0] encrypters_data_slice;
 
     Paralellizer uut(
@@ -49,11 +48,13 @@ module Paralellizer_tb;
         .key_encrypter_index_out(key_encrypter_index_out),
         .encrypter_data_packet_out(encrypter_data_packet_out),
         .encrypter_data_index_out(encrypter_data_index_out),
-        .encrypter_wait_for_ack_out(encrypter_wait_for_ack_out)
+        .encrypter_index_out(encrypter_index_out)
     );
     
     reg [3:0] spi_data_values[256:0];
+    reg [3:0] encrypters_delays [`NUM_ENCRYPTERS-1:0];
     integer fd, i, j;
+
     initial begin
         //fill spi_data_values with data from file
         fd = $fopen("./Constants/qspi_data.csv", "r");
@@ -66,6 +67,10 @@ module Paralellizer_tb;
         end
         $fclose(fd);
         $display(spi_data_values[0]);
+
+        for (j = 0; j < `NUM_ENCRYPTERS-1; j = j + 1) begin
+            encrypters_delays[j] = 0;
+        end
     end
 
     initial begin
@@ -117,6 +122,17 @@ module Paralellizer_tb;
         #1 clk = ~clk;
         //update slice of encrypters data to be seen on gktwave
         encrypters_data_slice[`ENCRYPTER_WIDTH-1:0] = encrypters_data[0][`ENCRYPTER_WIDTH-1:0];
+        if (clk)
+            for (j = 0; j < `NUM_ENCRYPTERS-1; j = j + 1) begin
+                if (encrypters_ready[j] && encrypters_data_ready[j]) begin
+                    encrypters_ready[j] = 0;
+                end
+                if (encrypters_data_ready[j]) encrypters_delays[j] = 4;
+                if (encrypters_delays[j]) begin
+                    if (encrypters_delays[j] == 1) encrypters_ready[j] = 1;
+                    encrypters_delays[j] = encrypters_delays[j] - 1;
+                end
+            end
     end
 
 endmodule
