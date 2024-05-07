@@ -67,8 +67,8 @@ initial begin
 end
 
 always @(posedge reqOut) begin
-    #10 rdyOut = 1;
-    #20 rdyOut = 0;
+    #10 rdyOut = 0;
+    #20 rdyOut = 1;
 end
 
 always @(posedge reqIn) begin

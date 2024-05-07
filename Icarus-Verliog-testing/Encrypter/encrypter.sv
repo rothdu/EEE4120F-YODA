@@ -58,7 +58,7 @@ module Encrypter (
         state <= `READING_DATA;
     end
 
-    always @(negedge rdyOut) begin
+    always @(posedge rdyOut) begin
         state <= `WAITING_RDY_DATA_IN;
         reqOut = 0;
         reqIn = 1;
