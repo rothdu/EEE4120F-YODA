@@ -1,8 +1,8 @@
 `timescale 1ns / 1ns
 `include "./Constants/constants.vh"
-`include "./Paralellizer/paralellizer.sv"
+`include "./Parallelizer/parallelizer.sv"
 
-module Paralellizer_tb;
+module Parallelizer_tb;
 
     reg clk; 
     reg reset;
@@ -29,7 +29,7 @@ module Paralellizer_tb;
     wire [`NUM_ENCRYPTERS_REG-1:0] encrypter_index_out;
     reg [`ENCRYPTER_WIDTH-1:0] encrypters_data_slice;
 
-    Paralellizer uut(
+    Parallelizer uut(
         .clk(clk),
         .reset(reset),
         .qspi_data(qspi_data),
@@ -74,9 +74,9 @@ module Paralellizer_tb;
     end
 
     initial begin
-        $dumpfile("Paralellizer/paralellizer_tb.vcd");
-        $dumpvars(0, Paralellizer_tb);
-        $display("Starting paralellizer testbench");
+        $dumpfile("Parallelizer/parallelizer_tb.vcd");
+        $dumpvars(0, Parallelizer_tb);
+        $display("Starting parallelizer testbench");
         clk = 0;
         reset = 0;
         qspi_data = 0;
@@ -99,7 +99,7 @@ module Paralellizer_tb;
         qspi_sending = 0;
 
         #10;
-        //simulate encrypters receiving key after paralellizer send it out
+        //simulate encrypters receiving key after parallelizer send it out
         for (i = 0; i < `NUM_ENCRYPTERS; i = i + 1) begin
             encrypters_ready[i] = 1;
             #1;
@@ -114,7 +114,7 @@ module Paralellizer_tb;
         end
         #2 qspi_sending = 0;
         #10
-        $display("Ending paralellizer testbench");
+        $display("Ending parallelizer testbench");
         $finish;
     end
 

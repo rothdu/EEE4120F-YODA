@@ -7,7 +7,7 @@
 `define STATE_WAITING_FOR_READY_ENCRYPTERS 3'b100
 `define STATE_ENCRYPTING 3'b101
 
-module Paralellizer (
+module Parallelizer (
     input wire clk,
     input wire reset,
     //QSPI
