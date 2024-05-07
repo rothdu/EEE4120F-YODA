@@ -14,7 +14,7 @@ module Encrypter (
     input wire [`ENCRYPTER_WIDTH-1:0] dataIn,
     input wire [`KEY_ROTATION_WIDTH-1:0] rot_offset,
     input wire rdyIn,
-    input wire rdyOut,
+    input wire cap,
     input wire prog,
 
     output reg [`ENCRYPTER_WIDTH-1:0] dataOut,
@@ -58,7 +58,7 @@ module Encrypter (
         state <= `READING_DATA;
     end
 
-    always @(posedge rdyOut) begin
+    always @(posedge cap) begin
         state <= `WAITING_RDY_DATA_IN;
         reqOut = 0;
         reqIn = 1;

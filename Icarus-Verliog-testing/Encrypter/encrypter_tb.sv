@@ -11,7 +11,7 @@ module Encrypter_tb;
     reg [`ENCRYPTER_WIDTH-1:0] dataIn;
     reg [`KEY_ROTATION_WIDTH-1:0] rot_offset;
     reg rdyIn;
-    reg rdyOut;
+    reg cap;
     reg prog;
 
     wire [`ENCRYPTER_WIDTH-1:0] dataOut;
@@ -27,7 +27,7 @@ Encrypter DUT(
     .dataIn(dataIn),
     .rot_offset(rot_offset),
     .rdyIn(rdyIn),
-    .rdyOut(rdyOut),
+    .cap(cap),
     .prog(prog),
     .dataOut(dataOut),
     .reqIn(reqIn),
@@ -62,13 +62,13 @@ initial begin
     $dumpfile("Encrypter/encrypter_tb.vcd");
     $dumpvars(1, Encrypter_tb);
 
-    $monitor("data_out: %b\trdyIn: %d\trdyOut: %d\treqIn: %d\treqOut: %d\tkey: %b\toffset: %d",dataOut,rdyIn,rdyOut,reqIn,reqOut,key,rot_offset);
+    $monitor("data_out: %b\trdyIn: %d\tcap: %d\treqIn: %d\treqOut: %d\tkey: %b\toffset: %d",dataOut,rdyIn,cap,reqIn,reqOut,key,rot_offset);
     #170;$finish;
 end
 
 always @(posedge reqOut) begin
-    #10 rdyOut = 0;
-    #20 rdyOut = 1;
+    #10 cap = 0;
+    #10 cap = 1;
 end
 
 always @(posedge reqIn) begin
