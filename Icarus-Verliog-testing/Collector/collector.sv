@@ -14,17 +14,17 @@ module Collector(
     input wire qspi_ready,
     
     //To encrypters
-    input wire [`ENCRYPTER_WIDTH-1:0] encrypters_data  [`NUM_ENCRYPTERS-1:0],
+    input wire [`ENCRYPTER_WIDTH-1:0] encrypters_data,
     input wire [`NUM_ENCRYPTERS-1:0] encrypters_data_ready,
-    output reg [`NUM_ENCRYPTERS-1:0] encrypters_capture,
-    //Watchers
+    output reg [`NUM_ENCRYPTERS-1:0] encrypters_capture
 
-    output reg [1:0] state_out,
-    output reg [`ENCRYPTER_WIDTH-1:0] encrypter_data_packe_out,
+    //Watchers
+    // output reg [1:0] state_out,
+    // output reg [`ENCRYPTER_WIDTH-1:0] encrypter_data_packe_out,
     
-    output reg [`ENCRYPTER_WIDTH_COUNT_REG-1:0] encrypter_data_subindex_out,
-    output reg [`NUM_ENCRYPTERS_REG-1:0] encrypter_index_out,
-    output reg [`ENCRYPTER_QSPI_COUNT_REG-1:0] encrypter_data_index_out    
+    // output reg [`ENCRYPTER_WIDTH_COUNT_REG-1:0] encrypter_data_subindex_out,
+    // output reg [`NUM_ENCRYPTERS_REG-1:0] encrypter_index_out,
+    // output reg [`ENCRYPTER_QSPI_COUNT_REG-1:0] encrypter_data_index_out    
 ); // 4-bit collector
 
     reg [1:0] state = `IDLE;
@@ -37,11 +37,11 @@ module Collector(
     reg [`ENCRYPTER_QSPI_COUNT_REG-1:0] encrypter_data_index;
 
     
-    assign state_out = state;
-    assign encrypter_data_packe_out = encrypter_data_packet;
-    assign encrypter_data_subindex_out = encrypter_data_subindex;
-    assign encrypter_index_out = encrypter_index;
-    assign encrypter_data_index_out = encrypter_data_index;
+    // assign state_out = state;
+    // assign encrypter_data_packe_out = encrypter_data_packet;
+    // assign encrypter_data_subindex_out = encrypter_data_subindex;
+    // assign encrypter_index_out = encrypter_index;
+    // assign encrypter_data_index_out = encrypter_data_index;
 
 
     
@@ -55,9 +55,10 @@ module Collector(
     always @(posedge clk) begin
         if (state == `WAITING) begin
             if(encrypters_data_ready[encrypter_index]) begin
-                for (encrypter_data_subindex = 0; encrypter_data_subindex < `ENCRYPTER_WIDTH; encrypter_data_subindex = encrypter_data_subindex + 1) begin
-                    encrypter_data_packet[encrypter_data_subindex] = encrypters_data[encrypter_index][encrypter_data_subindex];
-                end
+                encrypter_data_packet = encrypters_data;
+                // for (encrypter_data_subindex = 0; encrypter_data_subindex < `ENCRYPTER_WIDTH; encrypter_data_subindex = encrypter_data_subindex + 1) begin
+                //     encrypter_data_packet[encrypter_data_subindex] = encrypters_data[encrypter_index][encrypter_data_subindex];
+                // end
                 state <= `SENDING;
                 encrypter_data_index = 0;
             end

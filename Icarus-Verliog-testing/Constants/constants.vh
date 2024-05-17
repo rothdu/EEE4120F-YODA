@@ -14,5 +14,5 @@
 `define KEY_ENCRYPTER_COUNT `KEY_WIDTH/`ENCRYPTER_WIDTH // number of Encrypters transactions per key. `KEY_WIDTH/`ENCRYPTER_WIDTH
 `define KEY_ENCRYPTER_COUNT_REG $clog2(`KEY_ENCRYPTER_COUNT+1) // register size required to count the current Encrypter transaction of the key + 1. log2(`KEY_ENCRYPTER_COUNT+1)
 
-`define NUM_ENCRYPTERS 4 // number of Encrypters
+`define NUM_ENCRYPTERS 2 // number of Encrypters
 `define NUM_ENCRYPTERS_REG $clog2(`NUM_ENCRYPTERS+1) // register size required to count the current Encrypter + 1. log2(`NUM_ENCRYPTERS+1)

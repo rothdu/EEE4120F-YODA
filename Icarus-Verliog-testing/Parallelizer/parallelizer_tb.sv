@@ -13,8 +13,8 @@ module Parallelizer_tb;
     //Program
     reg prog;
     //To encrypters
-    wire[`ENCRYPTER_WIDTH-1:0] encrypters_data [`NUM_ENCRYPTERS-1:0];
-    wire [`KEY_ROTATION_WIDTH-1:0] encrypters_key_rotation [`NUM_ENCRYPTERS-1];
+    wire[`ENCRYPTER_WIDTH-1:0] encrypters_data;
+    wire [`KEY_ROTATION_WIDTH-1:0] encrypters_key_rotation;
     wire [`NUM_ENCRYPTERS-1:0] encrypters_program;
     wire [`NUM_ENCRYPTERS-1:0] encrypters_data_ready;
     reg [`NUM_ENCRYPTERS-1:0] encrypters_ready;
@@ -41,14 +41,14 @@ module Parallelizer_tb;
         .encrypters_program(encrypters_program),
         .encrypters_data_ready(encrypters_data_ready),
         .encrypters_ready(encrypters_ready),
-        .state_out(state_out),
-        .key_out(key_out),
-        .key_rotation_out(key_rotation_out),
-        .key_index_out(key_index_out),
-        .key_encrypter_index_out(key_encrypter_index_out),
-        .encrypter_data_packet_out(encrypter_data_packet_out),
-        .encrypter_data_index_out(encrypter_data_index_out),
-        .encrypter_index_out(encrypter_index_out)
+        .state_out(state_out)
+        // .key_out(key_out),
+        // .key_rotation_out(key_rotation_out),
+        // .key_index_out(key_index_out),
+        // .key_encrypter_index_out(key_encrypter_index_out),
+        // .encrypter_data_packet_out(encrypter_data_packet_out),
+        // .encrypter_data_index_out(encrypter_data_index_out),
+        // .encrypter_index_out(encrypter_index_out)
     );
     
     reg [3:0] spi_data_values[256:0];
@@ -121,7 +121,7 @@ module Parallelizer_tb;
     always begin
         #1 clk = ~clk;
         //update slice of encrypters data to be seen on gktwave
-        encrypters_data_slice[`ENCRYPTER_WIDTH-1:0] = encrypters_data[0][`ENCRYPTER_WIDTH-1:0];
+        // encrypters_data_slice[`ENCRYPTER_WIDTH-1:0] = encrypters_data[0][`ENCRYPTER_WIDTH-1:0];
         if (clk)
             for (j = 0; j < `NUM_ENCRYPTERS-1; j = j + 1) begin
                 if (encrypters_ready[j] && encrypters_data_ready[j]) begin

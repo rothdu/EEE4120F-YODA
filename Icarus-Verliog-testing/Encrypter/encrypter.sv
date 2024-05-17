@@ -10,30 +10,31 @@ module Encrypter (
     input wire clk,
     input wire reset,
 
-    input wire [`ENCRYPTER_WIDTH-1:0] dataIn,
-    input wire [`KEY_ROTATION_WIDTH-1:0] rot_offset,
-    input wire dataRdyIn,
-    input wire cap,
-    input wire prog,
+    // Parallelizer <-> Encrypter signals
+    input wire [`ENCRYPTER_WIDTH-1:0] data_in_p,
+    input wire [`KEY_ROTATION_WIDTH-1:0] key_rotation_p,
+    input wire prog_p,
+    input wire data_ready_in_p,
+    output reg ready_in_p,
 
-    output reg [`ENCRYPTER_WIDTH-1:0] dataOut,
-    output reg rdyIn,
-    output reg dataRdyOut,
-
-    output reg [2:0] state,
-    output reg [`KEY_WIDTH-1:0] keyRotated,
-    output reg [`ENCRYPTER_WIDTH-1:0] data_in
+    // Encrypter <-> Collector signals
+    output reg [`ENCRYPTER_WIDTH-1:0] data_out_c,
+    output reg data_ready_out_c,
+    input wire capture_c
 );
 
+    reg [2:0] state;
+    reg [`KEY_WIDTH-1:0] keyRotated;
+    reg [`ENCRYPTER_WIDTH-1:0] data_in_store;
     reg [`KEY_WIDTH-1:0] keyOrigin;
     reg [`KEY_ROTATION_WIDTH:0] offset;
 
     initial begin
         state <= `IDLE;
-        rdyIn = 0;
-        dataRdyOut = 0;
-        dataOut = 0;
-        data_in = 0;
+        ready_in_p = 0;
+        data_ready_out_c = 0;
+        data_out_c = 0;
+        data_in_store = 0;
         keyOrigin = 0;
         keyRotated = 0;
         offset = 0;
@@ -41,43 +42,43 @@ module Encrypter (
 
     always @(posedge reset) begin
         state <= `IDLE;
-        rdyIn = 0;
-        dataRdyOut = 0;
-        dataOut = 0;
-        data_in = 0;
+        ready_in_p = 0;
+        data_ready_out_c = 0;
+        data_out_c = 0;
+        data_in_store = 0;
         keyOrigin = 0;
         keyRotated = 0;
         offset = 0;
     end
 
-    always @(posedge prog) begin
+    always @(posedge prog_p) begin
         state <= `READING_KEY;
     end
 
-    always @(posedge dataRdyIn) begin
+    always @(posedge data_ready_in_p) begin
         state <= `READING_DATA_ENCRYPTING;
     end
 
-    always @(posedge cap) begin
+    always @(posedge capture_c) begin
         state <= `WAITING_RDY_DATA_IN;
-        dataRdyOut = 0;
-        rdyIn = 1;
+        data_ready_out_c = 0;
+        ready_in_p = 1;
     end
 
     always @(posedge clk) begin
         case (state)
             `READING_KEY: begin
-                keyOrigin = dataIn;
+                keyOrigin = data_in_p;
                 state = `WAITING_RDY_DATA_IN;
-                rdyIn = 1;
+                ready_in_p = 1;
             end
 
             `READING_DATA_ENCRYPTING: begin
-                data_in = dataIn;
-                offset = rot_offset;
-                rdyIn = 0;
+                data_in_store = data_in_p;
+                offset = key_rotation_p;
+                ready_in_p = 0;
                 keyRotated = (keyOrigin << offset) | (keyOrigin >> (`KEY_WIDTH-offset));
-                dataOut = data_in ^ keyRotated;
+                data_out_c = data_in_store ^ keyRotated;
                 state = `SENDING_DATA;
             end
         endcase
@@ -86,7 +87,7 @@ module Encrypter (
     always @(negedge clk) begin
         case (state)
             `SENDING_DATA: begin
-                dataRdyOut = 1;
+                data_ready_out_c = 1;
             end
         endcase
     end
