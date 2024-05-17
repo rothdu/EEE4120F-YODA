@@ -1,0 +1,240 @@
+$date
+	Fri May 17 12:32:23 2024
+$end
+$version
+	Icarus Verilog
+$end
+$timescale
+	1s
+$end
+$scope module TopLevel $end
+$var wire 2 ! encrypters_ready_pe [1:0] $end
+$var wire 3 " state_out_p [2:0] $end
+$var wire 1 # qspi_ready_tp $end
+$var wire 32 $ key_out [31:0] $end
+$var wire 2 % encrypters_program_pe [1:0] $end
+$var wire 5 & encrypters_key_rotation_pe [4:0] $end
+$var wire 2 ' encrypters_data_ready_pe [1:0] $end
+$var wire 32 ( encrypters_data_pe [31:0] $end
+$var reg 1 ) clk $end
+$var reg 1 * prog_tp $end
+$var reg 4 + qspi_data_tp [3:0] $end
+$var reg 1 , qspi_ready_ct $end
+$var reg 1 - qspi_sending_tp $end
+$var reg 1 . reset $end
+$var integer 32 / fd [31:0] $end
+$var integer 32 0 i [31:0] $end
+$var integer 32 1 j [31:0] $end
+$scope module p_inst $end
+$var wire 1 ) clk $end
+$var wire 2 2 encrypters_ready [1:0] $end
+$var wire 1 * prog $end
+$var wire 4 3 qspi_data [3:0] $end
+$var wire 1 - qspi_sending $end
+$var wire 1 . reset $end
+$var reg 4 4 encrypter_data_index [3:0] $end
+$var reg 32 5 encrypter_data_packet [31:0] $end
+$var reg 2 6 encrypter_index [1:0] $end
+$var reg 32 7 encrypters_data [31:0] $end
+$var reg 2 8 encrypters_data_ready [1:0] $end
+$var reg 5 9 encrypters_key_rotation [4:0] $end
+$var reg 2 : encrypters_program [1:0] $end
+$var reg 32 ; key [31:0] $end
+$var reg 1 < key_encrypter_index $end
+$var reg 4 = key_index [3:0] $end
+$var reg 32 > key_out [31:0] $end
+$var reg 5 ? key_rotation [4:0] $end
+$var reg 1 # qspi_ready $end
+$var reg 3 @ state [2:0] $end
+$var reg 3 A state_out [2:0] $end
+$upscope $end
+$upscope $end
+$enddefinitions $end
+$comment Show the parameter values. $end
+$dumpall
+$end
+#0
+$dumpvars
+b0 A
+b0 @
+bx ?
+b0 >
+b0 =
+x<
+b0 ;
+b0 :
+bx 9
+bx 8
+bx 7
+bx 6
+bx 5
+bx 4
+b0 3
+bz 2
+b1 1
+b100000000 0
+b10000000000000000000000000000011 /
+0.
+0-
+0,
+b0 +
+0*
+0)
+bx (
+bx '
+bx &
+b0 %
+b0 $
+0#
+b0 "
+bz !
+$end
+#1
+1)
+#2
+1#
+0)
+1.
+#3
+1)
+#4
+0)
+0.
+#5
+1)
+#6
+b1 "
+b1 A
+b1 @
+0)
+1*
+#7
+1)
+#8
+0)
+0*
+#9
+1)
+#10
+b10 "
+b10 A
+b10 @
+0)
+b1101 +
+b1101 3
+b0 0
+1-
+#11
+b1 =
+b1101 $
+b1101 >
+b1101 ;
+1)
+#12
+0)
+b1 +
+b1 3
+b1 0
+#13
+b10 =
+b11101 $
+b11101 >
+b11101 ;
+1)
+#14
+0)
+b1010 +
+b1010 3
+b10 0
+#15
+b11 =
+b101000011101 $
+b101000011101 >
+b101000011101 ;
+1)
+#16
+0)
+b11 0
+#17
+b100 =
+b1010101000011101 $
+b1010101000011101 >
+b1010101000011101 ;
+1)
+#18
+0)
+b11 +
+b11 3
+b100 0
+#19
+b101 =
+b111010101000011101 $
+b111010101000011101 >
+b111010101000011101 ;
+1)
+#20
+0)
+b10 +
+b10 3
+b101 0
+#21
+b110 =
+b1000111010101000011101 $
+b1000111010101000011101 >
+b1000111010101000011101 ;
+1)
+#22
+0)
+b1011 +
+b1011 3
+b110 0
+#23
+b111 =
+b1011001000111010101000011101 $
+b1011001000111010101000011101 >
+b1011001000111010101000011101 ;
+1)
+#24
+0)
+b1 +
+b1 3
+b111 0
+#25
+0#
+0<
+b11 "
+b11 A
+b11 @
+b1000 =
+b11011001000111010101000011101 $
+b11011001000111010101000011101 >
+b11011001000111010101000011101 ;
+1)
+#26
+b100 "
+b100 A
+b100 @
+1<
+b11 %
+b11 :
+b11011001000111010101000011101 (
+b11011001000111010101000011101 7
+b10 6
+0)
+0-
+b1000 0
+#27
+b0 %
+b0 :
+1#
+b10 6
+b0 "
+b0 A
+b0 @
+1)
+#28
+0)
+#29
+1)
+#30
+0)
