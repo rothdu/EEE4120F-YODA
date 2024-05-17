@@ -107,7 +107,7 @@ module Parallelizer_tb;
 
         //start encrypting data. can only be started from idle state
         #4 qspi_sending = 1;
-        for (i = `KEY_QSPI_COUNT; i < 200; i = i + 1) begin
+        for (i = `ENCRYPTER_QSPI_COUNT; i < 200; i = i + 1) begin
             qspi_data = spi_data_values[i];
             $display("Setting qspi_data to 0x%h", spi_data_values[i]);
             #2;
