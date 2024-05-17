@@ -227,9 +227,9 @@ int main(void)
     // printf("Overhead + Execution time: %f seconds\n", overhead_time + execution_time);
     printf("O+E time:\t\t%.9f seconds\n", O_E);
 
-    printf("Queue CPU Time:\t\t%.6f seconds \n", queue_CPU_time);
+    printf("Queue CPU Time:\t\t%.9f seconds \n", queue_CPU_time);
 
-    printf("\nTotal CPU Time:\t\t%.6f seconds \n", total_CPU_time);
+    printf("\nTotal CPU Time:\t\t%.9f seconds \n", total_CPU_time);
 
     printf("\nKernel check:\t\t%i \n", err4);
 #endif
