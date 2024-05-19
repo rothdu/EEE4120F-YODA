@@ -67,11 +67,6 @@ int main(void)
         }
     }
 
-    // for (size_t i = 0; i < DATALENGTH; i++)
-    // {
-    //     cout << std::hex << data[i] << "  " << dec << (i) << endl;
-    // }
-
     file.close();
 
     start = clock();
@@ -199,12 +194,18 @@ int main(void)
     double execution_time = (double)(end_time - start_time) * 1.0e-9;
     double O_E = (double)(end_time - submit_time) * 1.0e-9;
     double queue_CPU_time = (double)(end_queue - start_queue) / CLOCKS_PER_SEC;
+
+#ifndef DATA_ONLY
     cout << endl;
+
     for (size_t i = 0; i < DATALENGTH; i++)
     {
         cout << std::hex << output[i] << "  ";
     }
+
     cout << endl;
+#endif
+
     delete[] data, output;
     clReleaseKernel(kernel);
     clReleaseMemObject(data_buffer);
@@ -229,10 +230,13 @@ int main(void)
 
     printf("Queue CPU Time:\t\t%.9f seconds \n", queue_CPU_time);
 
-    printf("\nTotal CPU Time:\t\t%.9f seconds \n", total_CPU_time);
+    printf("Total CPU Time:\t\t%.9f seconds \n", total_CPU_time);
 
     printf("\nKernel check:\t\t%i \n", err4);
+#else
+    printf("%.9f,%.9f,%.9f,%.6f,%.6f,%i\n", overhead_time, execution_time, O_E, queue_CPU_time, total_CPU_time, err4);
 #endif
+
 
     return 0;
 }
