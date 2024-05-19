@@ -5,7 +5,7 @@
 #endif
 
 #ifndef DATALENGTH
-#define DATALENGTH 10
+#define DATALENGTH 70000
 #endif
 
 #include <stdio.h>
@@ -16,6 +16,7 @@
 #include <cmath>
 #include <sstream>
 #include <vector>
+#include <random>
 
 using namespace std;
 
@@ -30,23 +31,60 @@ int main(void)
 
     uint *output = new uint[DATALENGTH];
 
-        // Open the binary file in input mode
-    std::ifstream inputFile("../data/unencrypted/starwarsscript.txt", std::ios::binary);
-    if (!inputFile) {
-        std::cerr << "Could not open the file!" << std::endl;
-        return 1;
+    // Define the range of random numbers
+    std::uniform_int_distribution<uint32_t> distribution(1, UINT32_MAX);
+
+    // Create a random number generator
+    std::random_device rd;
+    std::mt19937 generator(rd());
+
+    for (size_t i = 0; i < DATALENGTH; i++)
+    {
+        data[i] = distribution(generator);
     }
-
-    const size_t bytesToRead = DATALENGTH * sizeof(uint32_t);
-
     
-    if (!inputFile.read(reinterpret_cast<char*>(&data[0]), bytesToRead)) {
-        std::cerr << "Error reading file or file is too small!" << std::endl;
-        return 1;
-    }
+        // Open the binary file in input mode
+    // std::ifstream inputFile("../data/unencrypted/starwarsscript.txt", std::ios::binary);
+    // if (!inputFile) {
+    //     std::cerr << "Could not open the file!" << std::endl;
+    //     return 1;
+    // }
 
-    // Close the file
-    inputFile.close();
+
+    // int countshift = 0;
+    // int count = 0;
+    // char c;
+
+    // while(count < DATALENGTH)
+    // {
+    //     inputFile.read(&c,sizeof(c));
+    //     data[count] = data[count] | c;
+
+    //     if (countshift==3)
+    //     {
+    //         countshift = 0;
+    //         count++;
+    //     }
+    //     else
+    //     {
+    //         countshift++;
+    //         data[count] = data[count] << 8;
+    //     }
+    // }
+
+    // // Close the file
+    // inputFile.close();
+
+// #ifndef DATA_ONLY
+//     cout << endl;
+
+//     for (size_t i = 0; i < DATALENGTH; i++)
+//     {
+//         cout << std::hex << data[i] << "  ";
+//     }
+
+//     cout << endl;
+// #endif
 
     start = clock();
 
@@ -130,49 +168,51 @@ int main(void)
 
     size_t global_size = DATALENGTH;
 
-    data_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, DATALENGTH * BITWIDTH / 8, data, &err);
+    data_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, global_size * sizeof(int), data, &err);
 
-    key_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, BITWIDTH / 8, &key, &err);
+    key_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(int), &key, &err);
 
-    output_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, DATALENGTH * BITWIDTH / 8, output, &err);
+    output_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, global_size * sizeof(int), output, &err);
 
     clSetKernelArg(kernel, 0, sizeof(cl_mem), &data_buffer);
     clSetKernelArg(kernel, 1, sizeof(cl_mem), &key_buffer);
     clSetKernelArg(kernel, 2, sizeof(cl_mem), &output_buffer);
 
     // event for profiling (timing)
-    cl_event event;
+    // cl_event event;
     cl_int err4;
 
     // letting OpenCL decide the workgroup size or manual selection
     // start running clock
-    start_queue = clock();
-    err4 = clEnqueueNDRangeKernel(queue, kernel, 1, NULL, &global_size, NULL, 0, NULL, &event);
+    // start_queue = clock();
+    err4 = clEnqueueNDRangeKernel(queue, kernel, 1, NULL, &global_size, NULL, 0, NULL, NULL);
 
-    err = clEnqueueReadBuffer(queue, output_buffer, CL_TRUE, 0, BITWIDTH / 8 * DATALENGTH, output, 0, NULL, &event);
+    err = clEnqueueReadBuffer(queue, output_buffer, CL_TRUE, 0, sizeof(int) * global_size, output, 0, NULL, NULL);
 
     // Wait for the kernel to finish execution
-    clWaitForEvents(1, &event);
+    // clWaitForEvents(1, &event);
 
     // This command stops the program here until everything in the queue has been run
     clFinish(queue);
 
     // total time from enqueueing kernel to reading back the output
-    end_queue = clock();
+    // end_queue = clock();
 
     // Get the execution time of the kernel
-    cl_ulong submit_time, start_time, end_time;
+    // cl_ulong submit_time, start_time, end_time;
 
     // submit is when the CPU first sends the queue, start is when the first kernel begins processing and end is when the GPU has completed its final kernel
-    clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_SUBMIT, sizeof(cl_ulong), &submit_time, NULL);
-    clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_START, sizeof(cl_ulong), &start_time, NULL);
-    clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_END, sizeof(cl_ulong), &end_time, NULL);
+    // clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_SUBMIT, sizeof(cl_ulong), &submit_time, NULL);
+    // clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_START, sizeof(cl_ulong), &start_time, NULL);
+    // clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_END, sizeof(cl_ulong), &end_time, NULL);
 
     // Convert nanoseconds to seconds
-    double overhead_time = (double)(start_time - submit_time) * 1.0e-9;
-    double execution_time = (double)(end_time - start_time) * 1.0e-9;
-    double O_E = (double)(end_time - submit_time) * 1.0e-9;
-    double queue_CPU_time = (double)(end_queue - start_queue) / CLOCKS_PER_SEC;
+    // double overhead_time = (double)(start_time - submit_time) * 1.0e-9;
+    // double execution_time = (double)(end_time - start_time) * 1.0e-9;
+    // double O_E = (double)(end_time - submit_time) * 1.0e-9;
+    // double queue_CPU_time = (double)(end_queue - start_queue) / CLOCKS_PER_SEC;
+
+    end = clock();
 
 #ifndef DATA_ONLY
     cout << endl;
@@ -185,6 +225,45 @@ int main(void)
     cout << endl;
 #endif
 
+#ifdef OUTPUT
+
+#ifndef ADVANCED
+    std::ofstream outputFile("../data/encrypted/starwarsscriptOpenCLSimple.enc", std::ios::binary);
+    if (!outputFile) {
+        std::cerr << "Could not open the file!" << std::endl;
+        return 1;
+    }
+#else
+    std::ofstream outputFile("../data/encrypted/starwarsscriptOpenCLAdvanced.enc", std::ios::binary);
+    if (!outputFile) {
+        std::cerr << "Could not open the file!" << std::endl;
+        return 1;
+    }
+
+#endif
+
+    countshift = 24;
+    count = 0;
+
+    while(count < DATALENGTH)
+    {
+        c = output[count] >> countshift;
+        outputFile.write(&c,sizeof(c));
+        if (countshift==0)
+        {
+            countshift = 24;
+            count++;
+        }
+        else
+        {
+            countshift = countshift - 8;
+        }
+    }
+
+    // Close the file
+    inputFile.close();
+#endif
+
     delete[] data, output;
     clReleaseKernel(kernel);
     clReleaseMemObject(data_buffer);
@@ -195,25 +274,24 @@ int main(void)
     clReleaseContext(context);
 
     // total CPU time from kernel structures to releasing resources
-    end = clock();
     double total_CPU_time = (double)(end - start) / CLOCKS_PER_SEC;
 
 // various display options
 #ifndef DATA_ONLY
-    printf("\nOverhead time:\t\t%.9f seconds\n", overhead_time);
+    // printf("\nOverhead time:\t\t%.9f seconds\n", overhead_time);
 
-    printf("Execution time:\t\t%.9f seconds\n", execution_time);
+    // printf("Execution time:\t\t%.9f seconds\n", execution_time);
 
     // printf("Overhead + Execution time: %f seconds\n", overhead_time + execution_time);
-    printf("O+E time:\t\t%.9f seconds\n", O_E);
+    // printf("O+E time:\t\t%.9f seconds\n", O_E);
 
-    printf("Queue CPU Time:\t\t%.9f seconds \n", queue_CPU_time);
+    // printf("Queue CPU Time:\t\t%.9f seconds \n", queue_CPU_time);
 
     printf("Total CPU Time:\t\t%.9f seconds \n", total_CPU_time);
 
-    printf("\nKernel check:\t\t%i \n", err4);
+    // printf("\nKernel check:\t\t%i \n", err4);
 #else
-    printf("%.9f,%.9f,%.9f,%.6f,%.6f,%i\n", overhead_time, execution_time, O_E, queue_CPU_time, total_CPU_time, err4);
+    printf("%.6f\n",total_CPU_time);
 #endif
 
     return 0;

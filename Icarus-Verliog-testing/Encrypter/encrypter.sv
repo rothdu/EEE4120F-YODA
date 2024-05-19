@@ -73,7 +73,6 @@ module Encrypter (
                 offset = key_rotation_p;
                 ready_p = 0;
                 keyRotated = (keyOrigin << offset) | (keyOrigin >> (`ENCRYPTER_WIDTH-offset));
-                // #20;
                 state = `SENDING_DATA;
             end
 
@@ -120,18 +119,18 @@ module EncrypterADV (
     // Encrypter <-> Collector signals
     output reg [`ENCRYPTER_WIDTH-1:0] data_out_c,
     output reg data_ready_out_c,
-    input wire capture_c,
-    output reg [31:0] keyS
+    input wire capture_c
 );
 
     reg [2:0] state;
     reg [`ENCRYPTER_WIDTH-1:0] keyRotated;
     reg [64-1:0] keySquared;
+    reg [`ENCRYPTER_WIDTH-1:0] keyNew;
     reg [`ENCRYPTER_WIDTH-1:0] keyMod;
     reg [`ENCRYPTER_WIDTH-1:0] data_in_store;
     reg [`ENCRYPTER_WIDTH-1:0] keyOrigin;
     reg [`KEY_ROTATION_WIDTH:0] offset;
-    reg [`KEY_ROTATION_WIDTH:0] xorOffset;
+    reg [`ENCRYPTER_WIDTH-1:0] xorOffset;
 
     initial begin
         state <= `IDLE;
@@ -139,6 +138,7 @@ module EncrypterADV (
         data_ready_out_c = 0;
         data_out_c = 0;
         data_in_store = 0;
+        keyNew = 0;
         keyRotated = 0;
         keyOrigin = 0;
         keySquared = 0;
@@ -153,6 +153,7 @@ module EncrypterADV (
             data_ready_out_c = 0;
             data_out_c = 0;
             data_in_store = 0;
+            keyNew = 0;
             keyRotated = 0;
             keyOrigin = 0;
             keySquared = 0;
@@ -180,12 +181,10 @@ module EncrypterADV (
                 offset = key_rotation_p;
                 ready_p = 0;
                 xorOffset = (keyOrigin & 5'b11111)^offset;
-                keyRotated = (keyOrigin << xorOffset) | (keyOrigin >> (`ENCRYPTER_WIDTH-xorOffset));
+                keyNew = keyOrigin^(xorOffset<<27);
+                keyRotated = (keyNew << xorOffset) | (keyNew >> (`ENCRYPTER_WIDTH-xorOffset));
                 keySquared = keyRotated*keyRotated;
-                
                 keyMod = keySquared%4294967311;
-                
-                #20;
                 state = `SENDING_DATA;
             end
 
@@ -200,7 +199,6 @@ module EncrypterADV (
     always @(negedge clk) begin
         case (state)
             `SENDING_DATA: begin
-                keyS = data_in_store;
                 data_out_c = data_in_store ^ keyMod;
                 data_ready_out_c = 1;
             end

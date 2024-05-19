@@ -18,20 +18,20 @@ Icarus-Verilog-testing: Contains verilog modules for an FPGA-based implementatio
 OpenCL testing: The OpenCL file contains code to replicate the DEA functionality
 using OpenCL.
 
-The Icarus verilog testing: file contains the verilog code used to run simulations of the FPGA DEA system.  First contained inside the Icarus verilog testing can be seen below:
+The Icarus verilog testing: file contains the verilog code used to run simulations of the FPGA DEA system. The subfolders inside the Icarus verilog testing can be seen below:
 
 * Collectror: Contains code to extract data from the encryptors and transmit
   it out of the FPGA via QSPI.
 * Constants: Contains constants that can be used to set up the
-  functionality of the DEA.
-* Encrypter: Contains the Verilog code for the basic and advanced encryptor modules.
-* Parallelizer: Paralyzer reads data via QSP I breaks it up into 
-  parallel sections and then sends it to the appropriate encrypter module.
-* Toplevel: Contains the Verilog code to integrate the above modules.
+  functionality of the encryptor such as bit width key width a number of
+  encryptors used.
+* Encrypter: Contains the verilog code for the basic and advanced encryptor modules.
+* Parallelizer: Paralyzer reads data via QSP I breaks it up into the parallel sections and then sends it to the appropriate encrypter module.
+* Toplevel: Contains the verilog code to integrate the above modules.
+* GKTWave: Contains GKTwave images
 
 
-The data file: contains a excel sheet with data that was used
-to test the encryption.
+The data file: Contains the input data for the tests and the test result data.
 
 The report file: contains the latex code used for creating the PDF report.
 
