@@ -4,7 +4,7 @@
 `include "./Encrypter/encrypter.sv"
 `include "./Collector/collector.sv"
 
-`define ENCRYPT 1
+`define ENCRYPT 0
 `define MAX_BYTES 4*1
 
 
@@ -109,14 +109,14 @@ module TopLevel();
         $dumpfile("TopLevel/top_level.vcd");
         $dumpvars(0, TopLevel);
 
-        for (packets = 1; packets <= 2**5; packets = packets * 2) begin
+        for (packets = 2**15; packets <= 2**15; packets = packets * 2) begin
             $display("Starting simulation with %d packets", packets);
 
             //fill spi_data_values with data from file
             if (`ENCRYPT) begin
                 fd_read = $fopen("../data/unencrypted/starwarsscript.txt", "r");
             end else begin
-                fd_read = $fopen("./TopLevel/encrypted_message.enc", "r");
+                fd_read = $fopen("../data/encrypted/starwarsscript_verilogADV.enc", "r");
             end
 
             if (fd_read == -1) begin
@@ -125,9 +125,9 @@ module TopLevel();
             end
 
             if (`ENCRYPT) begin
-                fd_write = $fopen("./TopLevel/encrypted_message.enc", "w");
+                fd_write = $fopen("../data/encrypted/starwarsscript_verilogADV.enc", "w");
             end else begin
-                fd_write = $fopen("./TopLevel/decrypted_message.txt", "w");
+                fd_write = $fopen("../data/deencrypted/starwarsscript_verilogADV.txt", "w");
             end
             if (fd_write == -1) begin
                 $display("Error encrypted data file!");
