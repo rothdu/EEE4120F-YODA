@@ -17,54 +17,67 @@ def main():
     vsdf = getDf(verilogSimplePath)
     vcdf = getDf(verilogComplexPath)
 
-    # dfs = (gsdf, gcdf, osdf, ocdf, vsdf, vcdf)
+    dfs = (gsdf, gcdf, osdf, ocdf, vsdf, vcdf)
 
-    dfs = (gsdf, gcdf)
+    # dfs = (gsdf, gcdf)
     for df in dfs:
-        df["Min"] = gsdf.iloc[:, 1:].min(axis=1)
+        df["Min"] = df.iloc[:, 1:].min(axis=1)
     
-    openclSpeedup = np.divide(gsdf["Min"], osdf["Min"])
-    verilogSpeedup = np.divide(gsdf["Min"], vsdf["Min"])
+
+
+
 
     fig, ax = plt.subplots(1, 1)
 
-    ax.scatter(openclSpeedup, gsdf["#Blocks"], s=15, c="g", label="OpenCL")
-    ax.scatter(verilogSpeedup, gsdf["#Blocks"], s=15, c="b", label="FPGA")
+    minLen = np.minimum(gsdf.shape[0], osdf.shape[0])
+    openclSpeedup = np.divide(gsdf["Min"][:minLen], osdf["Min"][:minLen])
+    ax.plot(gsdf["#Blocks"][:minLen], openclSpeedup, c="g", label="OpenCL")
 
-    ax.legend(loc="upper left")
+    minLen = np.minimum(gsdf.shape[0], vsdf.shape[0])
+    verilogSpeedup = np.divide(gsdf["Min"][:minLen], vsdf["Min"][:minLen])
+    ax.plot(gsdf["#Blocks"][:minLen], verilogSpeedup, c="b", label="FPGA")
 
-    fig.xscale("log", base=2)
-    fig.yscale("log")
-    fig.xticks(gsdf["#Blocks"])
-    fig.grid(True)
 
-    fig.title("Speedup of the OpenCL and FPGA implementations against the golden standard\nBasic encryption algorithm")
-    fig.xlabel("Number of blocks encrypted")
-    fig.ylabel("Speedup")
+    ax.legend()
+
+    plt.xscale("log", base=2)
+    plt.yscale("log")
+    plt.xticks(gsdf["#Blocks"][::2])
+    plt.grid(True)
+
+    plt.title("Speedup of the OpenCL and FPGA implementations vs golden standard\nBasic encryption algorithm")
+    plt.xlabel("Number of blocks encrypted")
+    plt.ylabel("Speedup")
 
     fig.savefig("simplespeedup.png")
 
-    fig.close()
+    plt.close()
+
 
     fig, ax = plt.subplots(1, 1)
 
-    ax.scatter(openclSpeedup, gsdf["#Blocks"], s=15, c="g", label="OpenCL")
-    ax.scatter(verilogSpeedup, gsdf["#Blocks"], s=15, c="b", label="FPGA")
+    minLen = np.minimum(gcdf.shape[0], ocdf.shape[0])
+    openclSpeedup = np.divide(gcdf["Min"][:minLen], ocdf["Min"][:minLen])
+    ax.plot(gcdf["#Blocks"][:minLen], openclSpeedup, c="g", label="OpenCL")
 
-    ax.legend(loc="upper left")
+    minLen = np.minimum(gcdf.shape[0], vcdf.shape[0])
+    verilogSpeedup = np.divide(gcdf["Min"][:minLen], vcdf["Min"][:minLen])
+    ax.plot(gcdf["#Blocks"][:minLen], verilogSpeedup, c="b", label="FPGA")
 
-    fig.xscale("log", base=2)
-    fig.yscale("log")
-    fig.xticks(gsdf["#Blocks"])
-    fig.grid(True)
+    ax.legend()
 
-    fig.title("Speedup of the OpenCL and FPGA implementations against the golden standard\nAdvanced encryption algorithm")
-    fig.xlabel("Number of blocks encrypted")
-    fig.ylabel("Speedup")
+    plt.xscale("log", base=2)
+    plt.yscale("log")
+    plt.xticks(gcdf["#Blocks"][::2])
+    plt.grid(True)
+
+    plt.title("Speedup of the OpenCL and FPGA implementations vs golden standard\nAdvanced encryption algorithm")
+    plt.xlabel("Number of blocks encrypted")
+    plt.ylabel("Speedup")
 
     fig.savefig("complexspeedup.png")
 
-    fig.close()
+    plt.close()
 
 
     
@@ -72,12 +85,6 @@ def main():
 def getDf(path):
     df = pd.read_csv(path, header=0)
     return df
-
-def speedupGraph():
-
-    fig, ax = plt.subplots(1, 1)
-
-    ax.scatter(opencl, xaxis)
 
 if __name__ == "__main__":
     main()
