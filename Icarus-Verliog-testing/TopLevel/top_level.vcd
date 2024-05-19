@@ -1,5 +1,5 @@
 $date
-	Sun May 19 18:02:26 2024
+	Sun May 19 18:21:43 2024
 $end
 $version
 	Icarus Verilog
@@ -8,8 +8,8 @@ $timescale
 	10ns
 $end
 $scope module TopLevel $end
-$var wire 32 ! encrypters_data_ec1 [31:0] $end
-$var wire 32 " encrypters_data_ec2 [31:0] $end
+$var wire 32 ! encrypters_data_ec0 [31:0] $end
+$var wire 32 " encrypters_data_ec1 [31:0] $end
 $var wire 1 # qspi_sending_ct $end
 $var wire 1 $ qspi_ready_tp $end
 $var wire 4 % qspi_data_ct [3:0] $end
