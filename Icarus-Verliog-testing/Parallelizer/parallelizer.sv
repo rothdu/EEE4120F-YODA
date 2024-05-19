@@ -33,7 +33,6 @@ module Parallelizer (
 );
 
 reg [2:0] state = `STATE_IDLE;
-reg [`ENCRYPTER_WIDTH-1:0] key;
 reg [`ENCRYPTER_QSPI_COUNT_REG-1:0] key_index;
 reg [`KEY_ROTATION_WIDTH-1:0] key_rotation;
 
@@ -45,7 +44,7 @@ integer i;
 
 initial begin
     // assign state_out = state;
-    // assign key_out = key;
+    // assign key_out = encrypter_data_packet;
     // assign key_rotation_out = key_rotation;
     // assign key_index_out = key_index;
     // assign encrypter_data_packet_out = encrypter_data_packet;
@@ -54,8 +53,8 @@ initial begin
 
     qspi_ready = 1'b0;
     encrypters_program = 0;
-    key = 0;
-    key_index = 0;
+    encrypter_data_packet = 0;
+    key_index = `ENCRYPTER_QSPI_COUNT;
 end
 
 //read on positive
@@ -72,14 +71,14 @@ always @(posedge clk) begin
             if (qspi_sending) begin
                 state <= `STATE_ENCRYPTING;
                 encrypter_index = 0;
-                encrypter_data_index = 0;
+                encrypter_data_index = `ENCRYPTER_QSPI_COUNT;
                 encrypters_data_ready = 0;
                 key_rotation = 0;
             end
             if (prog) begin
                 state <= `STATE_PROGRAMMING;
                 qspi_ready = 1'b1;
-                key_index = 0;
+                key_index = `ENCRYPTER_QSPI_COUNT;
             end
         end
 
@@ -89,12 +88,12 @@ always @(posedge clk) begin
             if (~qspi_sending) begin
                 state = `STATE_IDLE;
             end else begin
-                key[key_index*4] = qspi_data[0];
-                key[key_index*4+1] = qspi_data[1];
-                key[key_index*4+2] = qspi_data[2];
-                key[key_index*4+3] = qspi_data[3];
-                key_index = key_index + 1;
-                if (key_index == `ENCRYPTER_QSPI_COUNT) begin
+                key_index = key_index - 1;
+                encrypter_data_packet[key_index*4] = qspi_data[0];
+                encrypter_data_packet[key_index*4+1] = qspi_data[1];
+                encrypter_data_packet[key_index*4+2] = qspi_data[2];
+                encrypter_data_packet[key_index*4+3] = qspi_data[3];
+                if (key_index == 0) begin
                     state = `STATE_PROGRAMMING_ENCRYPTERS;
                     qspi_ready = 1'b0;
                 end
@@ -112,12 +111,12 @@ always @(posedge clk) begin
             if (~qspi_sending) begin
                 state = `STATE_IDLE;
             end else begin
-            //read spi data
+                //read spi data
+                encrypter_data_index = encrypter_data_index - 1;
                 encrypter_data_packet[encrypter_data_index*4] = qspi_data[0];
                 encrypter_data_packet[encrypter_data_index*4+1] = qspi_data[1];
                 encrypter_data_packet[encrypter_data_index*4+2] = qspi_data[2];
                 encrypter_data_packet[encrypter_data_index*4+3] = qspi_data[3];
-                encrypter_data_index = encrypter_data_index + 1;
             end
         end
 
@@ -136,7 +135,7 @@ always @(negedge clk) begin
         end
 
         `STATE_PROGRAMMING_ENCRYPTERS: begin
-            encrypters_data = key;
+            encrypters_data = encrypter_data_packet;
             for (encrypter_index = 0; encrypter_index < `NUM_ENCRYPTERS; encrypter_index = encrypter_index + 1) begin
                 encrypters_program[encrypter_index] = 1'b1;
             end
@@ -151,9 +150,9 @@ always @(negedge clk) begin
                 if (encrypters_data_ready[encrypter_index-1]) encrypters_data_ready[encrypter_index-1] = 0;
             end
 
-            if (encrypter_data_index == `ENCRYPTER_QSPI_COUNT) begin
+            if (encrypter_data_index == 0) begin
                 //when packet full, send to encrypters
-                encrypter_data_index = 0;
+                encrypter_data_index = `ENCRYPTER_QSPI_COUNT;
                 
                 //check if encrypter is ready for new data
                 if (encrypters_ready[encrypter_index]) begin

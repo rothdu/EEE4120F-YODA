@@ -57,7 +57,7 @@ module Collector(
             if(encrypters_data_ready[encrypter_index]) begin
                 encrypter_data_packet = encrypters_data[encrypter_index];
                 state <= `CAPTURING;
-                encrypter_data_index = 0;
+                encrypter_data_index = `ENCRYPTER_QSPI_COUNT;
             end else begin
                 qspi_sending = 0;
             end
@@ -76,12 +76,12 @@ module Collector(
         if (state == `SENDING) begin
             if(qspi_ready) begin
                 qspi_sending = 1;
+                encrypter_data_index = encrypter_data_index - 1;
                 qspi_data[0] = encrypter_data_packet[encrypter_data_index*4];
                 qspi_data[1] = encrypter_data_packet[encrypter_data_index*4+1]; 
                 qspi_data[2] = encrypter_data_packet[encrypter_data_index*4+2];
-                qspi_data[3] = encrypter_data_packet[encrypter_data_index*4+3];  
-                encrypter_data_index = encrypter_data_index + 1;   
-                if(encrypter_data_index == `ENCRYPTER_QSPI_COUNT) begin
+                qspi_data[3] = encrypter_data_packet[encrypter_data_index*4+3];     
+                if(encrypter_data_index == 0) begin
                         encrypter_index = encrypter_index + 1;
                         if (encrypter_index == `NUM_ENCRYPTERS) begin
                             encrypter_index = 0;

@@ -1,5 +1,5 @@
 $date
-	Sun May 19 15:19:49 2024
+	Sun May 19 17:43:28 2024
 $end
 $version
 	Icarus Verilog
@@ -7,7 +7,7 @@ $end
 $timescale
 	1ps
 $end
-$scope module Encrypter_tb $end
+$scope module EncrypterADV_tb $end
 $var wire 1 ! ready_p $end
 $var wire 1 " data_ready_out_c $end
 $var wire 32 # data_out_c [31:0] $end
@@ -56,8 +56,8 @@ b10110100001101010010101110010011 &
 1!
 0%
 #50000
-b111 (
-b11010111101101001110001000111001 &
+b0 (
+b11111010100110111110010001010 &
 1%
 #55000
 1'
@@ -80,7 +80,7 @@ b11010111101101001110001000111001 &
 1%
 #95000
 1"
-b11001101001000010010101111100011 #
+b101111100101011010011001101010 #
 0%
 #100000
 1%
