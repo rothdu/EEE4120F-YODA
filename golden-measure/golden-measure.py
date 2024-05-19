@@ -85,7 +85,7 @@ def validationTest(key, encryptionType):
 def timingTest(key, encryptionType):
     # TIMING TESTS
     numTests = 5
-    maxSize = 29
+    maxSize = 32
     timingList = [["#Blocks"]]
 
     for testNum in range(numTests):
@@ -93,18 +93,31 @@ def timingTest(key, encryptionType):
 
     for numBlocksExp in range(0, maxSize+1):
         numBlocks = 2**numBlocksExp
-        testsList = [numBlocks]
+        testsList = [2**numBlocksExp]
         for testNum in range(numTests):
+            executionTime = 0
+            tempNumBlocksExp = numBlocksExp
 
-            unencryptedData = np.random.randint(0, 2^32, size=numBlocks, dtype=np.uint32)
+            while (tempNumBlocksExp > 0):
+                if (numBlocksExp > 24):
+                    numBlocks = 2**24
+                    tempNumBlocksExp -= 24
+                else:
+                    numBlocks = 2**tempNumBlocksExp
+                    tempNumBlocksExp = 0
+                
+                # generate some data to be encrypted
+                unencryptedData = np.random.randint(0, 2^32, size=numBlocks, dtype=np.uint32)
+                # time encryption for this segment of data
+                startTime = time.perf_counter()
+                encryptedData = encrypt(unencryptedData, key, encryptionType)
+                endTime = time.perf_counter()
+                executionTime += endTime - startTime
 
-            # time encryption
-            startTime = time.perf_counter()
-            encryptedData = encrypt(unencryptedData, key, encryptionType)
-            endTime = time.perf_counter()
-
-            testsList.append(endTime-startTime)
+            # append to list of tests for this iteration    
+            testsList.append(executionTime)
         print(testsList)
+        # append to overall list
         timingList.append(testsList)
 
     df = pd.DataFrame(timingList)
