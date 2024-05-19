@@ -22,7 +22,9 @@ def main():
     key = np.uint32(0xB4352B93)
 
     # test simple and complex encryption implementation
-    for encryptionType in ('simple', 'complex'):
+    # for encryptionType in ('simple', 'complex'):
+    if True:
+        encryptionType = 'complex'
         # VALIDATION TEST
         # filepaths
         unencryptedPath = "../data/unencrypted/starwarsscript.txt"
@@ -45,13 +47,13 @@ def main():
 
         # TIMING TESTS
         numTests = 5
-        maxSize = 32
+        maxSize = 29
         timingList = [["#Blocks"]]
 
         for testNum in range(numTests):
             timingList[0].append("Test" + str(testNum + 1))
 
-        for numBlocksExp in range(maxSize+1):
+        for numBlocksExp in range(0, maxSize+1):
             numBlocks = 2**numBlocksExp
             testsList = [numBlocks]
             for testNum in range(numTests):
@@ -97,8 +99,8 @@ def encrypt(numpyData, key, mode = 'complex'):
     keyArr = np.full(np.shape(numpyData)[0], key, dtype=np.uint32) # create array of keys and ensure all are no longer than 32 bits
     shifts = np.mod(np.arange(len(keyArr)), np.uint32(32)).astype(np.uint32) # create array of shift amounts (mod32 to repeat every 32)
     if complexEncrypt:
-        shifts = np.bitwise_xor(key, np.bitwise_and(truncator5)) # change shifts to a random order
-        keyArr = np.bitwise_xor(keyArr, np.left_shift(np.uint32(27)))
+        shifts = np.bitwise_xor(key, np.bitwise_and(keyArr, truncator5)) # change shifts to a random order
+        keyArr = np.bitwise_xor(keyArr, np.left_shift(keyArr, np.uint32(27)))
     keyArr = np.bitwise_or(np.bitwise_and(np.left_shift(keyArr, shifts), truncator32), \
     np.right_shift(keyArr, np.uint32(32) - shifts)) # perform rotation on keys by shift amount
     
