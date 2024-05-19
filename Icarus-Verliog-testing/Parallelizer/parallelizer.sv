@@ -21,10 +21,10 @@ module Parallelizer (
     output reg [`KEY_ROTATION_WIDTH-1:0] encrypters_key_rotation,
     output reg [`NUM_ENCRYPTERS-1:0] encrypters_program,
     output reg [`NUM_ENCRYPTERS-1:0] encrypters_data_ready,
-    input wire [`NUM_ENCRYPTERS-1:0] encrypters_ready,
+    input wire [`NUM_ENCRYPTERS-1:0] encrypters_ready
     //Watchers
     // output reg [2:0] state_out,
-    output reg [`ENCRYPTER_WIDTH-1:0] key_out
+    // output reg [`ENCRYPTER_WIDTH-1:0] key_out
     // output reg [`KEY_ROTATION_WIDTH-1:0] key_rotation_out,
     // output reg [`ENCRYPTER_QSPI_COUNT_REG-1:0] key_index_out,
     // output reg [`ENCRYPTER_WIDTH-1:0] encrypter_data_packet_out,
@@ -45,7 +45,7 @@ integer i;
 
 initial begin
     // assign state_out = state;
-    assign key_out = key;
+    // assign key_out = key;
     // assign key_rotation_out = key_rotation;
     // assign key_index_out = key_index;
     // assign encrypter_data_packet_out = encrypter_data_packet;
@@ -104,8 +104,6 @@ always @(posedge clk) begin
         `STATE_WAITING_FOR_READY_ENCRYPTERS: begin
             if (& encrypters_ready) begin
                 state = `STATE_IDLE;
-                qspi_ready = 1'b1;
-                encrypters_program = 0;
                 encrypter_index = 0;
             end
         end
@@ -131,6 +129,11 @@ end
 //write on negative
 always @(negedge clk) begin
     case (state)
+
+        `STATE_IDLE: begin    
+            qspi_ready = 1'b1;
+            encrypters_program = 0;
+        end
 
         `STATE_PROGRAMMING_ENCRYPTERS: begin
             encrypters_data = key;
