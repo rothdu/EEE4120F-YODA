@@ -15,8 +15,34 @@ golden-measure: Contains the golden measure implementation of an XOR encryption 
 data: Contains various files representing data to be analysed by the encryptor(s)
 Icarus-Verilog-testing: Contains verilog modules for an FPGA-based implementation of the DEA, and appropriate testbenches for execution in Icarus Verilog.
 
+OpenCL testing: The OpenCL file contains code to replicate the DEA functionality
+using OpenCL.
+
+The Icarus verilog testing: file contains the verilog code used to run simulations of the FPGA DEA system.  First contained inside the Icarus verilog testing can be seen below:
+
+* Collectror: Contains code to extract data from the encryptors and transmit
+  it out of the FPGA via QSPI.
+* Constants: Contains constants that can be used to set up the
+  functionality of the encryptor such as bit width key width a number of
+  encryptors used.
+* Encrypter: Contains the verilog code for the encryptor modules such
+  that the encryptor takes in data encrypts it using the rotating key and outputs
+  it.
+* Parallelizer: Paralyzer reads data via QSP I breaks it up into the
+  parallel sections and then sends it to the appropriate encrypter module.
+* Toplevel: Contains the verilog code to integrate the above modules.
+
+
+The data file: contains a excel sheet with data that was used
+to test the encryption.
+
+The report file: contains the latex code used for creating the PDF report.
+
+
 # Contributing
 
-This project will not be actively maintained once the project is concluded on 15 May 2024, so pull requests and issues will not be monitored. 
+This project will not be actively maintained once the project is concluded on 15 May 2024, so pull requests and issues will not be monitored.
 
-However, if you would like to expand on or use this code - feel free to fork the repository or use the code herein, as per the terms specified in the LICENSE file.
+However, if you would like to expand on or use this code - feel free to fork the repository or use the code herein, as per the terms specified in the LICENSE file.The Icarus verilog testing file: contains the verilog code
+
+used to run simulations of the FPGA DEA system.
