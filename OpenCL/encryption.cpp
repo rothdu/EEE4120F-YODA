@@ -5,7 +5,7 @@
 #endif
 
 #ifndef DATALENGTH
-#define DATALENGTH 70000
+#define DATALENGTH 4294967295
 #endif
 
 #include <stdio.h>
