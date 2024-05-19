@@ -96,18 +96,18 @@ def timingTest(key, encryptionType):
         testsList = [2**numBlocksExp]
         for testNum in range(numTests):
             executionTime = 0
-            tempNumBlocksExp = numBlocksExp
+            tempNumBlocks = numBlocks
 
-            while (tempNumBlocksExp > 0):
+            while (tempNumBlocks > 0):
                 if (numBlocksExp > 24):
                     numBlocks = 2**24
-                    tempNumBlocksExp -= 24
+                    tempNumBlocks -= 2**24
                 else:
-                    numBlocks = 2**tempNumBlocksExp
-                    tempNumBlocksExp = 0
+                    numBlocks = tempNumBlocks
+                    tempNumBlocks = 0
                 
                 # generate some data to be encrypted
-                unencryptedData = np.random.randint(0, 2^32, size=numBlocks, dtype=np.uint32)
+                unencryptedData = np.random.randint(0, 2^32, size=tempNumBlocks, dtype=np.uint32)
                 # time encryption for this segment of data
                 startTime = time.perf_counter()
                 encryptedData = encrypt(unencryptedData, key, encryptionType)
