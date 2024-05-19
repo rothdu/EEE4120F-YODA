@@ -39,11 +39,11 @@ module TopLevel();
     // Watchers
     // wire [2:0] state_out_p;
     wire [`ENCRYPTER_WIDTH-1:0] key_out;
+    wire [`ENCRYPTER_WIDTH-1:0] encrypters_data_ec0;
     wire [`ENCRYPTER_WIDTH-1:0] encrypters_data_ec1;
-    wire [`ENCRYPTER_WIDTH-1:0] encrypters_data_ec2;
 
-    assign encrypters_data_ec1 = encrypters_data_ec[0];
-    assign encrypters_data_ec2 = encrypters_data_ec[1];
+    assign encrypters_data_ec0 = encrypters_data_ec[0];
+    assign encrypters_data_ec1 = encrypters_data_ec[1];
 
     Parallelizer p_inst(
         .clk(clk),

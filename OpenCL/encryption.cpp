@@ -15,6 +15,7 @@
 #include <string>
 #include <cmath>
 #include <sstream>
+#include <vector>
 
 using namespace std;
 
@@ -23,51 +24,29 @@ int main(void)
 
     clock_t start, end, start_queue, end_queue; // Timers
 
-    // uint8_t key = 0xB4352B93;
-    // uint16_t key = 0xB4352B93;
     uint key = 0xB4352B93;
 
-    // uint8_t* data = new uint8_t[DATALENGTH];
-    // uint16_t* data = new uint16_t[DATALENGTH];
     uint *data = new uint[DATALENGTH];
 
-    // uint8_t *output = new uint8_t[DATALENGTH];
-    // uint16_t *output = new uint16_t[DATALENGTH];
     uint *output = new uint[DATALENGTH];
 
-    string filename = "../data/rotating-xor.csv";
-
-    ifstream file(filename);
-
-    if (!file.is_open())
-    {
-        std::cerr << "Error opening file: " << filename << std::endl;
+        // Open the binary file in input mode
+    std::ifstream inputFile("../data/unencrypted/starwarsscript.txt", std::ios::binary);
+    if (!inputFile) {
+        std::cerr << "Could not open the file!" << std::endl;
         return 1;
     }
 
-    std::string line;
-    int count = 0;
-    std::getline(file, line);
+    const size_t bytesToRead = DATALENGTH * sizeof(uint32_t);
 
-    while (std::getline(file, line))
-    {
-        std::stringstream ss(line);
-        std::string cell;
-
-        // Get the first cell
-        if (std::getline(ss, cell, ','))
-        {
-            // Convert hex string to int
-            uint value;
-            std::stringstream hex_stream;
-            hex_stream << std::hex << cell;
-            hex_stream >> value;
-            data[count] = value;
-            count++;
-        }
+    
+    if (!inputFile.read(reinterpret_cast<char*>(&data[0]), bytesToRead)) {
+        std::cerr << "Error reading file or file is too small!" << std::endl;
+        return 1;
     }
 
-    file.close();
+    // Close the file
+    inputFile.close();
 
     start = clock();
 
@@ -236,7 +215,6 @@ int main(void)
 #else
     printf("%.9f,%.9f,%.9f,%.6f,%.6f,%i\n", overhead_time, execution_time, O_E, queue_CPU_time, total_CPU_time, err4);
 #endif
-
 
     return 0;
 }
