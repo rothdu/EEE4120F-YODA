@@ -22,62 +22,10 @@ def main():
     key = np.uint32(0xB4352B93)
 
     # test simple and complex encryption implementation
-    # for encryptionType in ('simple', 'complex'):
-    if True:
-        encryptionType = 'complex'
-        # VALIDATION TEST
-        # filepaths
-        unencryptedPath = "../data/unencrypted/starwarsscript.txt"
-        encryptedPath= "../data/encrypted/starwarsscriptgolden.enc"
-
-        # load unencrypted data
-        osUnencryptedPath = os.fsencode(unencryptedPath)
-        unencryptedFile = open(osUnencryptedPath, "r")
-        unencryptedData = np.fromfile(unencryptedFile, dtype='>u4')
-        unencryptedFile.close()
-
-        # encrypt
-        encryptedData = encrypt(unencryptedData, key, encryptionType)
-
-        # save encrypted daata
-        osEncryptedPath = os.fsencode(encryptedPath) 
-        encryptedFile = open(osEncryptedPath, "w")
-        encryptedData.astype('>u4').tofile(encryptedFile)
-        encryptedFile.close()
-
-        # TIMING TESTS
-        numTests = 5
-        maxSize = 29
-        timingList = [["#Blocks"]]
-
-        for testNum in range(numTests):
-            timingList[0].append("Test" + str(testNum + 1))
-
-        for numBlocksExp in range(0, maxSize+1):
-            numBlocks = 2**numBlocksExp
-            testsList = [numBlocks]
-            for testNum in range(numTests):
-
-                unencryptedData = np.random.randint(0, 2^32, size=numBlocks, dtype=np.uint32)
-
-                # time encryption
-                startTime = time.perf_counter()
-                encryptedData = encrypt(unencryptedData, key, encryptionType)
-                endTime = time.perf_counter()
-
-                testsList.append(endTime-startTime)
-            print(testsList)
-            timingList.append(testsList)
-
-        df = pd.DataFrame(timingList)
-        df.columns = df.iloc[0]
-        df = df[1:]
-        timingPath = "../data/timing/golden" + encryptionType + ".csv"
-        osTimingPath = os.fsencode(timingPath)
-        timingFile = open(osTimingPath, "w")
-        df.to_csv(timingFile, index=False)
-        timingFile.close()
-        print(df)
+    for encryptionType in ('simple', 'complex'):
+        validationTest(key, encryptionType)
+        timingTest(key, encryptionType)
+        
     
 def encrypt(numpyData, key, mode = 'complex'):
     '''
@@ -99,8 +47,8 @@ def encrypt(numpyData, key, mode = 'complex'):
     keyArr = np.full(np.shape(numpyData)[0], key, dtype=np.uint32) # create array of keys and ensure all are no longer than 32 bits
     shifts = np.mod(np.arange(len(keyArr)), np.uint32(32)).astype(np.uint32) # create array of shift amounts (mod32 to repeat every 32)
     if complexEncrypt:
-        shifts = np.bitwise_xor(key, np.bitwise_and(keyArr, truncator5)) # change shifts to a random order
-        keyArr = np.bitwise_xor(keyArr, np.left_shift(keyArr, np.uint32(27)))
+        shifts = np.bitwise_xor(shifts, np.bitwise_and(keyArr, truncator5)) # change shifts to a random order
+        keyArr = np.bitwise_xor(keyArr, np.left_shift(shifts, np.uint32(27)))
     keyArr = np.bitwise_or(np.bitwise_and(np.left_shift(keyArr, shifts), truncator32), \
     np.right_shift(keyArr, np.uint32(32) - shifts)) # perform rotation on keys by shift amount
     
@@ -108,13 +56,66 @@ def encrypt(numpyData, key, mode = 'complex'):
         keyArr = keyArr.astype(np.uint64)
         keyArr = np.power(keyArr, 2) # square
         keyArr = np.mod(keyArr, 4294967311) # mod the big prime number
-        keyArr = keyArr.astype(np.uint32) # truncate back down to 32 bits
+        keyArr = keyArr.astype(np.uint32) # truncate back down to 32 bit
     
     # XOR each data piece with relevant key data
     numpyData = np.bitwise_xor(numpyData, keyArr)
 
     return numpyData
 
+def validationTest(key, encryptionType):
+    unencryptedPath = "../data/unencrypted/starwarsscript.txt"
+    encryptedPath= "../data/encrypted/starwarsscriptgolden" + encryptionType + ".enc"
+
+    # load unencrypted data
+    osUnencryptedPath = os.fsencode(unencryptedPath)
+    unencryptedFile = open(osUnencryptedPath, "r")
+    unencryptedData = np.fromfile(unencryptedFile, dtype='>u4')
+    unencryptedFile.close()
+
+    # encrypt
+    encryptedData = encrypt(unencryptedData, key, encryptionType)
+
+    # save encrypted daata
+    osEncryptedPath = os.fsencode(encryptedPath) 
+    encryptedFile = open(osEncryptedPath, "w")
+    encryptedData.astype('>u4').tofile(encryptedFile)
+    encryptedFile.close()
+
+def timingTest(key, encryptionType):
+    # TIMING TESTS
+    numTests = 5
+    maxSize = 29
+    timingList = [["#Blocks"]]
+
+    for testNum in range(numTests):
+        timingList[0].append("Test" + str(testNum + 1))
+
+    for numBlocksExp in range(0, maxSize+1):
+        numBlocks = 2**numBlocksExp
+        testsList = [numBlocks]
+        for testNum in range(numTests):
+
+            unencryptedData = np.random.randint(0, 2^32, size=numBlocks, dtype=np.uint32)
+
+            # time encryption
+            startTime = time.perf_counter()
+            encryptedData = encrypt(unencryptedData, key, encryptionType)
+            endTime = time.perf_counter()
+
+            testsList.append(endTime-startTime)
+        print(testsList)
+        timingList.append(testsList)
+
+    df = pd.DataFrame(timingList)
+    df.columns = df.iloc[0]
+    df = df[1:]
+    timingPath = "../data/timing/golden" + encryptionType + ".csv"
+    osTimingPath = os.fsencode(timingPath)
+    timingFile = open(osTimingPath, "w")
+    df.to_csv(timingFile, index=False)
+    timingFile.close()
+
+
 if __name__ == "__main__":
     main()
-
