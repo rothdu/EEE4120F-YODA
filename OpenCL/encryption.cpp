@@ -5,7 +5,7 @@
 #endif
 
 #ifndef DATALENGTH
-#define DATALENGTH 10
+#define DATALENGTH 70000
 #endif
 
 #include <stdio.h>
@@ -16,6 +16,7 @@
 #include <cmath>
 #include <sstream>
 #include <vector>
+#include <random>
 
 using namespace std;
 
@@ -30,49 +31,60 @@ int main(void)
 
     uint *output = new uint[DATALENGTH];
 
-        // Open the binary file in input mode
-    std::ifstream inputFile("../data/unencrypted/starwarsscript.txt", std::ios::binary);
-    if (!inputFile) {
-        std::cerr << "Could not open the file!" << std::endl;
-        return 1;
-    }
+    // Define the range of random numbers
+    std::uniform_int_distribution<uint32_t> distribution(1, UINT32_MAX);
 
-    const size_t bytesToRead = DATALENGTH * sizeof(uint);
-
-    int countshift = 0;
-    int count = 0;
-    char c;
-
-    while(count < DATALENGTH)
-    {
-        inputFile.read(&c,sizeof(c));
-        data[count] = data[count] | c;
-
-        if (countshift==3)
-        {
-            countshift = 0;
-            count++;
-        }
-        else
-        {
-            countshift++;
-            data[count] = data[count] << 8;
-        }
-    }
-
-    // Close the file
-    inputFile.close();
-
-#ifndef DATA_ONLY
-    cout << endl;
+    // Create a random number generator
+    std::random_device rd;
+    std::mt19937 generator(rd());
 
     for (size_t i = 0; i < DATALENGTH; i++)
     {
-        cout << std::hex << data[i] << "  ";
+        data[i] = distribution(generator);
     }
+    
+        // Open the binary file in input mode
+    // std::ifstream inputFile("../data/unencrypted/starwarsscript.txt", std::ios::binary);
+    // if (!inputFile) {
+    //     std::cerr << "Could not open the file!" << std::endl;
+    //     return 1;
+    // }
 
-    cout << endl;
-#endif
+
+    // int countshift = 0;
+    // int count = 0;
+    // char c;
+
+    // while(count < DATALENGTH)
+    // {
+    //     inputFile.read(&c,sizeof(c));
+    //     data[count] = data[count] | c;
+
+    //     if (countshift==3)
+    //     {
+    //         countshift = 0;
+    //         count++;
+    //     }
+    //     else
+    //     {
+    //         countshift++;
+    //         data[count] = data[count] << 8;
+    //     }
+    // }
+
+    // // Close the file
+    // inputFile.close();
+
+// #ifndef DATA_ONLY
+//     cout << endl;
+
+//     for (size_t i = 0; i < DATALENGTH; i++)
+//     {
+//         cout << std::hex << data[i] << "  ";
+//     }
+
+//     cout << endl;
+// #endif
 
     start = clock();
 
@@ -156,11 +168,11 @@ int main(void)
 
     size_t global_size = DATALENGTH;
 
-    data_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, DATALENGTH * BITWIDTH / 8, data, &err);
+    data_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, global_size * sizeof(int), data, &err);
 
-    key_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, BITWIDTH / 8, &key, &err);
+    key_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(int), &key, &err);
 
-    output_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, DATALENGTH * BITWIDTH / 8, output, &err);
+    output_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, global_size * sizeof(int), output, &err);
 
     clSetKernelArg(kernel, 0, sizeof(cl_mem), &data_buffer);
     clSetKernelArg(kernel, 1, sizeof(cl_mem), &key_buffer);
@@ -175,7 +187,7 @@ int main(void)
     // start_queue = clock();
     err4 = clEnqueueNDRangeKernel(queue, kernel, 1, NULL, &global_size, NULL, 0, NULL, NULL);
 
-    err = clEnqueueReadBuffer(queue, output_buffer, CL_TRUE, 0, BITWIDTH / 8 * DATALENGTH, output, 0, NULL, NULL);
+    err = clEnqueueReadBuffer(queue, output_buffer, CL_TRUE, 0, sizeof(int) * global_size, output, 0, NULL, NULL);
 
     // Wait for the kernel to finish execution
     // clWaitForEvents(1, &event);
@@ -213,18 +225,22 @@ int main(void)
     cout << endl;
 #endif
 
-//     // // Open the binary file in input mode
-//     // std::ofstream outputFile("../data/encrypted/starwarsscriptOpenCLSimple.enc", std::ios::binary);
-//     // if (!outputFile) {
-//     //     std::cerr << "Could not open the file!" << std::endl;
-//     //     return 1;
-//     // }
-//     // Open the binary file in input mode
+#ifdef OUTPUT
+
+#ifndef ADVANCED
+    std::ofstream outputFile("../data/encrypted/starwarsscriptOpenCLSimple.enc", std::ios::binary);
+    if (!outputFile) {
+        std::cerr << "Could not open the file!" << std::endl;
+        return 1;
+    }
+#else
     std::ofstream outputFile("../data/encrypted/starwarsscriptOpenCLAdvanced.enc", std::ios::binary);
     if (!outputFile) {
         std::cerr << "Could not open the file!" << std::endl;
         return 1;
     }
+
+#endif
 
     countshift = 24;
     count = 0;
@@ -246,6 +262,8 @@ int main(void)
 
     // Close the file
     inputFile.close();
+#endif
+
     delete[] data, output;
     clReleaseKernel(kernel);
     clReleaseMemObject(data_buffer);
