@@ -23,8 +23,8 @@ def main():
 
     # test simple and complex encryption implementation
     for encryptionType in ('simple', 'complex'):
-        validationTest(key, encryptionType)
-        # timingTest(key, encryptionType)
+        #validationTest(key, encryptionType)
+        timingTest(key, encryptionType)
         
     
 def encrypt(numpyData, key, mode = 'complex'):
@@ -85,7 +85,7 @@ def validationTest(key, encryptionType):
 def timingTest(key, encryptionType):
     # TIMING TESTS
     numTests = 5
-    maxSize = 32
+    maxSize = 31
     timingList = [["#Blocks"]]
 
     for testNum in range(numTests):
