@@ -4,8 +4,8 @@
 `include "./Encrypter/encrypter.sv"
 `include "./Collector/collector.sv"
 
-`define ENCRYPT 0
-`define MAX_BYTES -1
+`define ENCRYPT 1
+`define MAX_BYTES 4*4
 
 module TopLevel();
 
@@ -98,7 +98,7 @@ module TopLevel();
     initial begin
         //fill spi_data_values with data from file
         if (`ENCRYPT) begin
-            fd_read = $fopen("./TopLevel/message.txt", "r");
+            fd_read = $fopen("../data/unencrypted/starwarsscript.txt", "r");
         end else begin
             fd_read = $fopen("./TopLevel/encrypted_message.enc", "r");
         end
@@ -144,7 +144,7 @@ module TopLevel();
         //send data
         while (!qspi_ready_tp) #2;
         #2 qspi_sending_tp = 1; #2
-        while (!$feof(fd_read) || bytes_sent == `MAX_BYTES) begin
+        while (!$feof(fd_read) && (bytes_sent <= `MAX_BYTES)) begin
             char_read = $fgetc(fd_read);
             // $display("[RAW] 0x%x", char_read);
 
@@ -156,6 +156,7 @@ module TopLevel();
             qspi_data_tp = char_read[3:0]; #2;
             // $display("[DAT] 0x%x", qspi_data_tp);
             bytes_sent = bytes_sent + 1;
+            // $display("Bytes sent: %d", bytes_sent);
         end
         #2 qspi_sending_tp = 0;
 
