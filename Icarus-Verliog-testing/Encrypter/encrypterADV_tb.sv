@@ -3,7 +3,7 @@
 `include "./Constants/constants.vh"
 `include "./Encrypter/encrypter.sv"
 
-module Encrypter_tb;
+module EncrypterADV_tb;
 
     reg clk;
     reg reset;
@@ -18,7 +18,7 @@ module Encrypter_tb;
     wire data_ready_out_c;
     reg capture_c;
 
-Encrypter DUT(
+EncrypterADV DUT(
     .clk(clk),
     .reset(reset),
 
@@ -55,8 +55,8 @@ end
 
 initial begin
     //monitoring
-    $dumpfile("Encrypter/encrypter_tb.vcd");
-    $dumpvars(1, Encrypter_tb);
+    $dumpfile("Encrypter/encrypterADVtb.vcd");
+    $dumpvars(1, EncrypterADV_tb);
 
     //$monitor("data_out: %b\tdataRdyIn: %d\tcap: %d\trdyIn: %d\tdataRdyOut: %d\tkeyRotated: %b\toffset: %d",dataOut,dataRdyIn,cap,rdyIn,dataRdyOut,keyRotated,rot_offset);
     #170;$finish;
@@ -69,8 +69,8 @@ end
 
 always @(posedge ready_p) begin
     #5 
-    data_in_p = 32'b11010111101101001110001000111001;
-    key_rotation_p = 5'b00111; #5;
+    data_in_p = 32'h1F537C8A;
+    key_rotation_p = 5'b00000; #5;
     data_ready_in_p = 1;
 end
 
