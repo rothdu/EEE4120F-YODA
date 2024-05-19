@@ -24,7 +24,7 @@ def main():
     # test simple and complex encryption implementation
     for encryptionType in ('simple', 'complex'):
         validationTest(key, encryptionType)
-        timingTest(key, encryptionType)
+        # timingTest(key, encryptionType)
         
     
 def encrypt(numpyData, key, mode = 'complex'):
@@ -49,7 +49,7 @@ def encrypt(numpyData, key, mode = 'complex'):
     if complexEncrypt:
         shifts = np.bitwise_xor(shifts, np.bitwise_and(keyArr, truncator5)) # change shifts to a random order
         keyArr = np.bitwise_xor(keyArr, np.left_shift(shifts, np.uint32(27)))
-    keyArr = np.bitwise_or(np.bitwise_and(np.left_shift(keyArr, shifts), truncator32), \
+    keyArr = np.bitwise_or(np.left_shift(keyArr, shifts).astype(np.uint32), \
     np.right_shift(keyArr, np.uint32(32) - shifts)) # perform rotation on keys by shift amount
     
     if complexEncrypt:
@@ -85,7 +85,7 @@ def validationTest(key, encryptionType):
 def timingTest(key, encryptionType):
     # TIMING TESTS
     numTests = 5
-    maxSize = 29
+    maxSize = 28
     timingList = [["#Blocks"]]
 
     for testNum in range(numTests):

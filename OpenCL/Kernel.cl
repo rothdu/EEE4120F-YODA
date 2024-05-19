@@ -15,9 +15,13 @@ __kernel void EncryptionAdvanced(__global uint* data, __global uint* key, __glob
 	// XOR the first five bits of the data and the rotation
 	uchar xorRot = (*key&0b11111)^(index%32);
 
+	uint newKey = *key^(xorRot<<27);
+
 	// Rotate the key by the XOR rotation, square it and modulus it with 4294967311
-	ulong rotated = ((*key << xorRot) | (*key >> (32-xorRot)))&0xffffffff;
-	unsigned long keyMod = (rotated*rotated) % 4294967311;
+	ulong rotated = ((newKey << xorRot) | (newKey >> (32-xorRot)))&0xffffffff;
+	ulong keyMod = (rotated*rotated) % 4294967311;
+	
+	printf("%d ", xorRot);
 
 	// XOR the modified key with the data
 	output[index] = data[index]^keyMod;
