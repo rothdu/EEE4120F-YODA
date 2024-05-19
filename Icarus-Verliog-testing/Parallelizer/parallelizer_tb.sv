@@ -20,10 +20,9 @@ module Parallelizer_tb;
     reg [`NUM_ENCRYPTERS-1:0] encrypters_ready;
     //Watchers
     wire [2:0] state_out;
-    wire [`KEY_WIDTH-1:0] key_out;
+    wire [`ENCRYPTER_WIDTH-1:0] key_out;
     wire [`KEY_ROTATION_WIDTH-1:0] key_rotation_out;
-    wire [`KEY_QSPI_COUNT_REG-1:0] key_index_out;
-    wire [`KEY_ENCRYPTER_COUNT_REG-1:0] key_encrypter_index_out;
+    wire [`ENCRYPTER_QSPI_COUNT_REG-1:0] key_index_out;
     wire [`ENCRYPTER_WIDTH-1:0] encrypter_data_packet_out;
     wire [`ENCRYPTER_QSPI_COUNT_REG-1:0] encrypter_data_index_out;
     wire [`NUM_ENCRYPTERS_REG-1:0] encrypter_index_out;
@@ -40,12 +39,11 @@ module Parallelizer_tb;
         .encrypters_key_rotation(encrypters_key_rotation),
         .encrypters_program(encrypters_program),
         .encrypters_data_ready(encrypters_data_ready),
-        .encrypters_ready(encrypters_ready),
-        .state_out(state_out)
+        .encrypters_ready(encrypters_ready)
+        // .state_out(state_out)
         // .key_out(key_out),
         // .key_rotation_out(key_rotation_out),
         // .key_index_out(key_index_out),
-        // .key_encrypter_index_out(key_encrypter_index_out),
         // .encrypter_data_packet_out(encrypter_data_packet_out),
         // .encrypter_data_index_out(encrypter_data_index_out),
         // .encrypter_index_out(encrypter_index_out)
@@ -91,7 +89,7 @@ module Parallelizer_tb;
         #2 prog = 1; #2 prog = 0;
         //send key
         #2 qspi_sending = 1;
-        for (i = 0; i < `KEY_QSPI_COUNT; i = i + 1) begin
+        for (i = 0; i < `ENCRYPTER_QSPI_COUNT; i = i + 1) begin
             qspi_data = spi_data_values[i];
             $display("Setting qspi_data to 0x%h", spi_data_values[i]);
             #2;

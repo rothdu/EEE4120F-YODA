@@ -1,8 +1,11 @@
-`timescale 10ns/10ns
+`timescale 10ns / 10ns
 `include "./Constants/constants.vh"
 `include "./Parallelizer/parallelizer.sv"
 `include "./Encrypter/encrypter.sv"
 `include "./Collector/collector.sv"
+
+`define ENCRYPT 0
+`define MAX_BYTES -1
 
 module TopLevel();
 
@@ -53,13 +56,13 @@ module TopLevel();
         .encrypters_key_rotation(encrypters_key_rotation_pe),
         .encrypters_program(encrypters_program_pe),
         .encrypters_data_ready(encrypters_data_ready_pe),
-        .encrypters_ready(encrypters_ready_pe),
+        .encrypters_ready(encrypters_ready_pe)
         // .state_out(state_out_p),
-        .key_out(key_out)
+        // .key_out(key_out)
     );
 
-    genvar e;
     generate
+        genvar e;
         for (e = 0; e < `NUM_ENCRYPTERS; e = e + 1) begin : encrypter_loop
             Encrypter e_inst (
                 .clk(clk),
@@ -87,30 +90,32 @@ module TopLevel();
         .encrypters_capture(encrypters_capture_ec)
     );
 
-    reg [3:0] spi_data_values[255:0];
-    reg [3:0] encrypters_delays [`NUM_ENCRYPTERS-1:0];
-    integer fd, i, j;
+    reg [31:0] key = 32'hB4352B93;
+    integer fd_read, fd_write, i, j, bytes_sent = 0;
+    reg [7:0] char_read, char_write;
+    logic char_write_progress = 0;
 
     initial begin
         //fill spi_data_values with data from file
-        fd = $fopen("./Constants/qspi_data.csv", "r");
-        if (fd == -1) begin
+        if (`ENCRYPT) begin
+            fd_read = $fopen("./TopLevel/message.txt", "r");
+        end else begin
+            fd_read = $fopen("./TopLevel/encrypted_message.enc", "r");
+        end
+
+        if (fd_read == -1) begin
             $display("Error data file!");
             $finish;  // Exit simulation on error
         end
-        for (i = 0; i < 256; i++) begin
-            j = $fscanf(fd, "%h", spi_data_values[i]);
-        end
-        $fclose(fd);
 
-        fd = $fopen("./TopLevel/encrypted_qspi_data.csv", "w");
-        if (fd == -1) begin
+        if (`ENCRYPT) begin
+            fd_write = $fopen("./TopLevel/encrypted_message.enc", "w");
+        end else begin
+            fd_write = $fopen("./TopLevel/decrypted_message.txt", "w");
+        end
+        if (fd_write == -1) begin
             $display("Error encrypted data file!");
             $finish;  // Exit simulation on error
-        end
-
-        for (j = 0; j < `NUM_ENCRYPTERS-1; j = j + 1) begin
-            encrypters_delays[j] = 0;
         end
     end
 
@@ -126,37 +131,51 @@ module TopLevel();
         //send key
         while (!qspi_ready_tp) #2;
         #2 qspi_sending_tp = 1; #2
-        for (i = 0; i < `ENCRYPTER_QSPI_COUNT; i = i + 1) begin
-            qspi_data_tp = spi_data_values[i];
-            $display("[KEY] qspi_data_tp <= 0x%h", spi_data_values[i]);
+        for (i = `ENCRYPTER_QSPI_COUNT-1; i > -1; i = i - 1) begin
+            qspi_data_tp[0] = key[i*4];
+            qspi_data_tp[1] = key[i*4+1];
+            qspi_data_tp[2] = key[i*4+2];
+            qspi_data_tp[3] = key[i*4+3];
             #2;
+            // $display("[KEY] 0x%x", qspi_data_tp);
         end
         qspi_sending_tp = 0;
 
         //send data
         while (!qspi_ready_tp) #2;
         #2 qspi_sending_tp = 1; #2
-        for (i = `ENCRYPTER_QSPI_COUNT; i < 256; i = i + 1) begin
-            if (!qspi_ready_tp) begin
-                i = i - 1;
-                #2;
-            end else begin
-                qspi_data_tp = spi_data_values[i];
-                $display("[DATA] qspi_data_tp <= 0x%h", spi_data_values[i]);
-                #2;
-            end
+        while (!$feof(fd_read) || bytes_sent == `MAX_BYTES) begin
+            char_read = $fgetc(fd_read);
+            // $display("[RAW] 0x%x", char_read);
+
+            while (!qspi_ready_tp) #2;
+            qspi_data_tp = char_read[7:4]; #2;
+            // $display("[DAT] 0x%x", qspi_data_tp);
+
+            while (!qspi_ready_tp) #2;
+            qspi_data_tp = char_read[3:0]; #2;
+            // $display("[DAT] 0x%x", qspi_data_tp);
+            bytes_sent = bytes_sent + 1;
         end
         #2 qspi_sending_tp = 0;
 
-        #4 $fclose(fd); $finish;
+        while (qspi_sending_ct) #2;
+        #4 $fclose(fd_read); $fclose(fd_write); $finish;
     end
 
     always begin
         #1 clk = ~clk;
         if (clk) begin
             if (qspi_sending_ct) begin
-                $fwrite(fd, "0x%x\n", qspi_data_ct);
-                $display("[COL] qspi_data_ct >= 0x%h", qspi_data_ct);
+                if (char_write_progress == 0) begin
+                    char_write_progress = 1;
+                    char_write[7:4] = qspi_data_ct;
+                end else begin
+                    char_write_progress = 0;
+                    char_write[3:0] = qspi_data_ct;
+                    // $display("[ENC] 0x%x", char_write);
+                    j = $fputc(char_write, fd_write);
+                end
             end
         end
     end
