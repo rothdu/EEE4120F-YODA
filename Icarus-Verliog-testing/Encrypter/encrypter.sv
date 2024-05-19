@@ -73,7 +73,6 @@ module Encrypter (
                 offset = key_rotation_p;
                 ready_p = 0;
                 keyRotated = (keyOrigin << offset) | (keyOrigin >> (`ENCRYPTER_WIDTH-offset));
-                #20;
                 state = `SENDING_DATA;
             end
 
@@ -186,7 +185,6 @@ module EncrypterADV (
                 keyRotated = (keyNew << xorOffset) | (keyNew >> (`ENCRYPTER_WIDTH-xorOffset));
                 keySquared = keyRotated*keyRotated;
                 keyMod = keySquared%4294967311;
-                #20;
                 state = `SENDING_DATA;
             end
 

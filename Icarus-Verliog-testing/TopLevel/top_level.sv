@@ -5,7 +5,8 @@
 `include "./Collector/collector.sv"
 
 `define ENCRYPT 1
-`define MAX_BYTES 4*4
+`define MAX_BYTES 4*1
+
 
 module TopLevel();
 
@@ -64,7 +65,7 @@ module TopLevel();
     generate
         genvar e;
         for (e = 0; e < `NUM_ENCRYPTERS; e = e + 1) begin : encrypter_loop
-            Encrypter e_inst (
+            EncrypterADV e_inst (
                 .clk(clk),
                 .reset(reset),
                 .data_in_p(encrypters_data_pe),
@@ -91,77 +92,93 @@ module TopLevel();
     );
 
     reg [31:0] key = 32'hB4352B93;
-    integer fd_read, fd_write, i, j, bytes_sent = 0;
+    integer fd_read, fd_write, fd_csv, i, j, bytes_sent = 0, packets;
     reg [7:0] char_read, char_write;
     logic char_write_progress = 0;
 
     initial begin
-        //fill spi_data_values with data from file
-        if (`ENCRYPT) begin
-            fd_read = $fopen("../data/unencrypted/starwarsscript.txt", "r");
-        end else begin
-            fd_read = $fopen("./TopLevel/encrypted_message.enc", "r");
-        end
-
-        if (fd_read == -1) begin
+        fd_csv = $fopen("./TopLevel/encrypter_output.csv", "w");
+        if (fd_csv == -1) begin
             $display("Error data file!");
             $finish;  // Exit simulation on error
         end
-
-        if (`ENCRYPT) begin
-            fd_write = $fopen("./TopLevel/encrypted_message.enc", "w");
-        end else begin
-            fd_write = $fopen("./TopLevel/decrypted_message.txt", "w");
-        end
-        if (fd_write == -1) begin
-            $display("Error encrypted data file!");
-            $finish;  // Exit simulation on error
-        end
+        $fwrite(fd_csv, "#Blocks,Test1\n");
     end
 
     initial begin
         $dumpfile("TopLevel/top_level.vcd");
         $dumpvars(0, TopLevel);
-        $display("Starting simulation");
 
-        //set data on neg edge, read on the rising
-        #2 reset = 1; #2 reset = 0;
-        #2 prog_tp = 1; #2 prog_tp = 0;
+        for (packets = 1; packets <= 2**5; packets = packets * 2) begin
+            $display("Starting simulation with %d packets", packets);
 
-        //send key
-        while (!qspi_ready_tp) #2;
-        #2 qspi_sending_tp = 1; #2
-        for (i = `ENCRYPTER_QSPI_COUNT-1; i > -1; i = i - 1) begin
-            qspi_data_tp[0] = key[i*4];
-            qspi_data_tp[1] = key[i*4+1];
-            qspi_data_tp[2] = key[i*4+2];
-            qspi_data_tp[3] = key[i*4+3];
-            #2;
-            // $display("[KEY] 0x%x", qspi_data_tp);
-        end
-        qspi_sending_tp = 0;
+            //fill spi_data_values with data from file
+            if (`ENCRYPT) begin
+                fd_read = $fopen("../data/unencrypted/starwarsscript.txt", "r");
+            end else begin
+                fd_read = $fopen("./TopLevel/encrypted_message.enc", "r");
+            end
 
-        //send data
-        while (!qspi_ready_tp) #2;
-        #2 qspi_sending_tp = 1; #2
-        while (!$feof(fd_read) && (bytes_sent <= `MAX_BYTES)) begin
-            char_read = $fgetc(fd_read);
-            // $display("[RAW] 0x%x", char_read);
+            if (fd_read == -1) begin
+                $display("Error data file!");
+                $finish;  // Exit simulation on error
+            end
 
+            if (`ENCRYPT) begin
+                fd_write = $fopen("./TopLevel/encrypted_message.enc", "w");
+            end else begin
+                fd_write = $fopen("./TopLevel/decrypted_message.txt", "w");
+            end
+            if (fd_write == -1) begin
+                $display("Error encrypted data file!");
+                $finish;  // Exit simulation on error
+            end
+
+
+            //set data on neg edge, read on the rising
+            #2 reset = 1; #2 reset = 0;
+            #2 prog_tp = 1; #2 prog_tp = 0;
+
+            //send key
             while (!qspi_ready_tp) #2;
-            qspi_data_tp = char_read[7:4]; #2;
-            // $display("[DAT] 0x%x", qspi_data_tp);
+            #2 qspi_sending_tp = 1; #2
+            for (i = `ENCRYPTER_QSPI_COUNT-1; i > -1; i = i - 1) begin
+                qspi_data_tp[0] = key[i*4];
+                qspi_data_tp[1] = key[i*4+1];
+                qspi_data_tp[2] = key[i*4+2];
+                qspi_data_tp[3] = key[i*4+3];
+                #2;
+                // $display("[KEY] 0x%x", qspi_data_tp);
+            end
+            qspi_sending_tp = 0;
 
+            //send data
+            bytes_sent = 0;
             while (!qspi_ready_tp) #2;
-            qspi_data_tp = char_read[3:0]; #2;
-            // $display("[DAT] 0x%x", qspi_data_tp);
-            bytes_sent = bytes_sent + 1;
-            // $display("Bytes sent: %d", bytes_sent);
-        end
-        #2 qspi_sending_tp = 0;
+            #2 qspi_sending_tp = 1; #2
+            while (!$feof(fd_read) && (bytes_sent < packets*4)) begin
+                char_read = $fgetc(fd_read);
+                // $display("[RAW] 0x%x", char_read);
 
-        while (qspi_sending_ct) #2;
-        #4 $fclose(fd_read); $fclose(fd_write); $finish;
+                while (!qspi_ready_tp) #2;
+                qspi_data_tp = char_read[7:4]; #2;
+                // $display("[DAT] 0x%x", qspi_data_tp);
+
+                while (!qspi_ready_tp) #2;
+                qspi_data_tp = char_read[3:0]; #2;
+                // $display("[DAT] 0x%x", qspi_data_tp);
+
+                bytes_sent = bytes_sent + 1;
+                // $display("Bytes sent: %d", bytes_sent);
+            end
+            #2 qspi_sending_tp = 0; #10;
+
+            while (qspi_sending_ct) #2;
+            $fclose(fd_read); $fclose(fd_write);
+            $display("Simulation time: %.8f s", $time/(10.0**8));
+            $fwrite(fd_csv, "%d,%.8f\n", packets, $time/(10.0**8));
+        end
+        $fclose(fd_csv); $finish;
     end
 
     always begin
